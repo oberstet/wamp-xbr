@@ -1,5 +1,7 @@
 # Copyright (c) Crossbar.io Technologies GmbH. Licensed under Apache 2.0.
 
+import os
+import shutil
 from setuptools import setup
 
 with open('xbr/_version.py') as f:
@@ -72,25 +74,29 @@ extras_require_ui = [
     # 'PyGObject>=3.52.4',        # GNU Lesser General Public License v2 or later (LGPLv2+) (GNU LGPL)
 ]
 
-xbr_packages = [
-    'autobahn.xbr',
-    'autobahn.xbr.test',
-    'autobahn.asyncio.xbr',
-    'autobahn.twisted.xbr',
-]
-
-if 'AUTOBAHN_STRIP_XBR' in os.environ:
-    # force regeneration of egg-info manifest for stripped install
-    shutil.rmtree('autobahn.egg-info', ignore_errors=True)
-else:
-    extras_require_all += extras_require_xbr
-    packages += xbr_packages
-    package_data['xbr'] = [
-        './xbr/templates/py-autobahn/*.py.jinja2',
-        './xbr/templates/sol-eip712/*.sol.jinja2',
-    ]
-    entry_points['console_scripts'] += ["xbrnetwork = autobahn.xbr._cli:_main"]
-    entry_points['console_scripts'] += ["xbrnetwork-ui = autobahn.xbr._gui:_main"]
+# NOTE: The following code block was commented out as it references undefined variables
+# (extras_require_all, packages, package_data, entry_points) that don't exist in this setup.py.
+# This appears to be legacy code copied from autobahn-python's setup.py.
+#
+# xbr_packages = [
+#     'autobahn.xbr',
+#     'autobahn.xbr.test',
+#     'autobahn.asyncio.xbr',
+#     'autobahn.twisted.xbr',
+# ]
+#
+# if 'AUTOBAHN_STRIP_XBR' in os.environ:
+#     # force regeneration of egg-info manifest for stripped install
+#     shutil.rmtree('autobahn.egg-info', ignore_errors=True)
+# else:
+#     extras_require_all += extras_require_xbr
+#     packages += xbr_packages
+#     package_data['xbr'] = [
+#         './xbr/templates/py-autobahn/*.py.jinja2',
+#         './xbr/templates/sol-eip712/*.sol.jinja2',
+#     ]
+#     entry_points['console_scripts'] += ["xbrnetwork = autobahn.xbr._cli:_main"]
+#     entry_points['console_scripts'] += ["xbrnetwork-ui = autobahn.xbr._gui:_main"]
 
 extras_require={
     'xbr': extras_require_xbr,
