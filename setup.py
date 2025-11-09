@@ -1,4 +1,4 @@
-# Copyright (c) Crossbar.io Technologies GmbH. Licensed under Apache 2.0.
+# Copyright (c) typedef int GmbH. Licensed under Apache 2.0.
 
 import os
 import shutil
@@ -104,7 +104,7 @@ setup(
     description='XBR smart contracts and ABIs',
     long_description=docstr,
     license='Apache 2.0 License',
-    author='Crossbar.io Technologies GmbH',
+    author='typedef int GmbH',
     author_email='autobahnws@googlegroups.com',
     url='https://github.com/crossbario/xbr-protocol',
     platforms=('Any'),

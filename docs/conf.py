@@ -44,9 +44,9 @@ author = 'The XBR Project'
 
 this_year = '{0}'.format(time.strftime('%Y'))
 if this_year != '2018':
-    copyright = '2018-{0}, Crossbar.io Technologies GmbH'.format(this_year)
+    copyright = '2018-{0}, typedef int GmbH'.format(this_year)
 else:
-    copyright = '2018, Crossbar.io Technologies GmbH'
+    copyright = '2018, typedef int GmbH'
 
 # The short X.Y version
 with open('../package.json') as f:
