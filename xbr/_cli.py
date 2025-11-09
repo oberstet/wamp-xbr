@@ -33,12 +33,12 @@ else:
 
 from jinja2 import Environment, FileSystemLoader
 
-from autobahn import xbr
-from autobahn import __version__
+import xbr
+from xbr._version import __version__
 
 if not xbr.HAS_XBR:
-    print("\nYou must install the [xbr] extra to use xbrnetwork")
-    print("For example, \"pip install autobahn[xbr]\".")
+    print("\nYou must install the xbr package to use xbrnetwork")
+    print("For example, \"pip install xbr\".")
     sys.exit(1)
 
 from xbr._abi import XBR_DEBUG_TOKEN_ADDR, XBR_DEBUG_NETWORK_ADDR, XBR_DEBUG_DOMAIN_ADDR, \

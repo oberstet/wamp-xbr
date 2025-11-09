@@ -26,7 +26,7 @@
 
 import web3
 import txaio
-from autobahn import xbr
+import xbr
 
 
 class SimpleBlockchain(object):
