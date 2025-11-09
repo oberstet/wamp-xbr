@@ -98,11 +98,6 @@ extras_require_ui = [
 #     entry_points['console_scripts'] += ["xbrnetwork = autobahn.xbr._cli:_main"]
 #     entry_points['console_scripts'] += ["xbrnetwork-ui = autobahn.xbr._gui:_main"]
 
-extras_require={
-    'xbr': extras_require_xbr,
-    'ui': extras_require_ui,
-},
-
 setup(
     name='xbr',
     version=__version__,
@@ -115,6 +110,14 @@ setup(
     platforms=('Any'),
     python_requires='>=3.7',
     packages=['xbr'],
+
+    # Install all xbr dependencies by default
+    install_requires=extras_require_xbr,
+
+    # Optional dependencies for UI tools
+    extras_require={
+        'ui': extras_require_ui,
+    },
 
     # this flag will make files from MANIFEST.in go into _source_ distributions only
     include_package_data=True,
