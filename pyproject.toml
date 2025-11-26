@@ -7,13 +7,12 @@ name = "xbr"
 dynamic = ["version"]
 description = "XBR smart contracts and ABIs"
 readme = "README.rst"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
 authors = [
     {name = "typedef int GmbH", email = "autobahnws@googlegroups.com"}
 ]
 keywords = ["autobahn", "crossbar", "wamp", "xbr", "ethereum", "abi"]
 classifiers = [
-    "License :: OSI Approved :: Apache Software License",
     "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: Developers",
@@ -82,6 +81,27 @@ ui = [
     # "PyGObject>=3.52.4",
 ]
 
+# Development dependencies
+dev = [
+    # Build tools
+    "build>=1.0.0",
+    "wheel>=0.36.2",
+    "twine>=3.3.0",
+
+    # Testing
+    "pytest>=7.0.0",
+    "pytest-runner>=2.11.1",
+    "coverage>=5.0.0",
+
+    # Code quality
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+
+    # Documentation
+    "sphinx>=4.0.0",
+    "sphinx-rtd-theme>=1.0.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/wamp-proto/wamp-xbr"
 Repository = "https://github.com/wamp-proto/wamp-xbr"
@@ -100,3 +120,51 @@ exclude = ["test*", "autobahn-asyncio-xbr*", "autobahn-twisted-xbr*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "xbr._version.__version__"}
+
+# Ruff configuration (replaces flake8, black, yapf)
+[tool.ruff]
+line-length = 119
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "E721",  # type() comparison instead of isinstance() - deliberate style choice
+    "E402",  # module level import not at top (intentional in some files)
+]
+
+# MyPy configuration
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+# Pytest configuration
+[tool.pytest.ini_options]
+testpaths = ["xbr/test"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["xbr"]
+omit = ["*/test/*", "*/test_*.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
