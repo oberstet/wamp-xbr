@@ -388,8 +388,8 @@ upgrade-all:
 # -- Building
 # -----------------------------------------------------------------------------
 
-# Build source distribution
-build-sourcedist venv="": (install-build-tools venv)
+# Build source distribution (compiles Solidity contracts first if needed)
+build-sourcedist venv="": (install-build-tools venv) compile-contracts
     #!/usr/bin/env bash
     set -e
     VENV_NAME="{{ venv }}"
@@ -401,8 +401,8 @@ build-sourcedist venv="": (install-build-tools venv)
     ${VENV_PYTHON} -m build --sdist
     ls -la dist/
 
-# Build wheel package
-build venv="": (install-build-tools venv)
+# Build wheel package (compiles Solidity contracts first if needed)
+build venv="": (install-build-tools venv) compile-contracts
     #!/usr/bin/env bash
     set -e
     VENV_NAME="{{ venv }}"
@@ -415,8 +415,8 @@ build venv="": (install-build-tools venv)
     ${VENV_PYTHON} -m build --wheel
     ls -la dist/
 
-# Build both source distribution and wheel
-dist venv="": (install-build-tools venv)
+# Build both source distribution and wheel (compiles Solidity contracts first)
+dist venv="": (install-build-tools venv) compile-contracts
     #!/usr/bin/env bash
     set -e
     VENV_NAME="{{ venv }}"
@@ -577,27 +577,126 @@ publish-rtd tag="":
     echo ""
 
 # -----------------------------------------------------------------------------
-# -- Makefile Integration (Solidity/Truffle targets)
+# -- Solidity/Truffle Build Tools
 # -----------------------------------------------------------------------------
 
-# Run a Makefile target (for Solidity/Truffle targets)
+# Truffle executable path (from local node_modules)
+TRUFFLE := justfile_directory() / "node_modules/.bin/truffle"
+SOLHINT := justfile_directory() / "node_modules/.bin/solhint"
+
+# Install Node.js/npm dependencies for Solidity contract compilation
+install-node-tools:
+    #!/usr/bin/env bash
+    set -e
+    echo "==> Installing Node.js dependencies for Solidity compilation..."
+
+    # Check if npm is available
+    if ! command -v npm &> /dev/null; then
+        echo "❌ ERROR: npm not found. Please install Node.js first."
+        echo "   Install via: https://nodejs.org/ or use your package manager"
+        exit 1
+    fi
+
+    echo "--> Node.js version: $(node --version)"
+    echo "--> npm version: $(npm --version)"
+
+    # Check if Truffle is already installed
+    if [ -x "{{ TRUFFLE }}" ]; then
+        echo "--> Truffle already installed: $({{ TRUFFLE }} version | head -1)"
+    else
+        # Install dev dependencies (truffle, solhint, etc.)
+        echo "--> Installing npm dependencies..."
+        npm install
+    fi
+
+    # Verify installation
+    if [ -x "{{ TRUFFLE }}" ]; then
+        echo "✓ Truffle available"
+    else
+        echo "❌ ERROR: Truffle installation failed"
+        exit 1
+    fi
+
+    if [ -x "{{ SOLHINT }}" ]; then
+        echo "✓ Solhint available"
+    else
+        echo "⚠ WARNING: Solhint not available (optional)"
+    fi
+
+    echo "✓ Node.js tools ready"
+
+# Compile Solidity smart contracts (creates build/contracts/*.json ABI files)
+compile-contracts: install-node-tools
+    #!/usr/bin/env bash
+    set -e
+    echo "==> Compiling Solidity smart contracts..."
+
+    # Show contract stats
+    echo "--> Contract source files:"
+    wc -l contracts/*.sol 2>/dev/null || echo "No .sol files found"
+
+    # Clean old build artifacts
+    rm -rf build/contracts/*.json 2>/dev/null || true
+    mkdir -p build/contracts
+
+    # Compile with Truffle (downloads solc on first run, then caches it)
+    echo "--> Running Truffle compile..."
+    {{ TRUFFLE }} compile --all
+
+    # Verify ABI files were created
+    echo "--> Verifying ABI files..."
+    python3 ./check-abi-files.py
+
+    # List generated files
+    echo ""
+    echo "--> Generated ABI files:"
+    ls -la build/contracts/*.json 2>/dev/null || echo "No ABI files generated!"
+
+    echo ""
+    echo "✓ Contract compilation complete"
+
+# Lint Solidity contracts
+lint-contracts: install-node-tools
+    #!/usr/bin/env bash
+    set -e
+    echo "==> Linting Solidity contracts..."
+    {{ SOLHINT }} "contracts/**/*.sol"
+    echo "✓ Solidity linting passed"
+
+# Clean Solidity build artifacts
+clean-contracts:
+    #!/usr/bin/env bash
+    set -e
+    echo "==> Cleaning Solidity build artifacts..."
+    rm -rf build/contracts/
+    rm -rf node_modules/
+    rm -f package-lock.json
+    echo "--> Solidity artifacts cleaned."
+
+# -----------------------------------------------------------------------------
+# -- Makefile Integration (Legacy wrappers)
+# -----------------------------------------------------------------------------
+
+# Run a Makefile target (for advanced Solidity/Truffle targets)
 make target:
     #!/usr/bin/env bash
     set -e
     echo "==> Running Makefile target: {{target}}"
     make {{target}}
 
-# Compile Solidity smart contracts (wrapper for `make compile`)
-truffle-compile:
-    just make compile
-
-# Run Solidity tests (wrapper for `make test`)
-truffle-test:
-    just make test
+# Run Solidity tests (requires Ganache running)
+truffle-test: install-node-tools
+    #!/usr/bin/env bash
+    set -e
+    echo "==> Running Truffle tests..."
+    {{ TRUFFLE }} test --network ganache
 
 # Deploy contracts to Ganache (wrapper for `make deploy_ganache`)
-truffle-deploy:
-    just make deploy_ganache
+truffle-deploy: compile-contracts
+    #!/usr/bin/env bash
+    set -e
+    echo "==> Deploying contracts to Ganache..."
+    {{ TRUFFLE }} migrate --reset --network ganache
 
 # Run Ganache blockchain (wrapper for `make run_ganache`)
 ganache-run:
