@@ -264,6 +264,22 @@ install-all:
         just install-dev ${env}
     done
 
+# Meta-recipe to run `install-dev` on all environments
+install-dev-all:
+    #!/usr/bin/env bash
+    set -e
+    for venv in {{ENVS}}; do
+        just install-dev ${venv}
+    done
+
+# Meta-recipe to run `install-tools` on all environments
+install-tools-all:
+    #!/usr/bin/env bash
+    set -e
+    for venv in {{ENVS}}; do
+        just install-tools ${venv}
+    done
+
 # -----------------------------------------------------------------------------
 # -- Code Quality
 # -----------------------------------------------------------------------------
@@ -277,14 +293,17 @@ check-format venv="":
     ${VENV_PYTHON} -m ruff format --check xbr/
     echo "--> Format check passed"
 
-# Auto-format code with Ruff (modifies files in-place!)
-autoformat venv="":
+# Automatically fix all formatting and code style issues.
+fix-format venv="": (install-tools venv)
     #!/usr/bin/env bash
     set -e
     VENV_PYTHON=$(just --quiet _get-venv-python {{ venv }})
     echo "==> Auto-formatting code with Ruff..."
     ${VENV_PYTHON} -m ruff format xbr/
     echo "--> Code formatted"
+
+# Alias for fix-format (backward compatibility)
+autoformat venv="": (fix-format venv)
 
 # Run Ruff linter
 check-lint venv="":
@@ -332,13 +351,38 @@ test-all:
     done
 
 # Generate code coverage report (requires: `just install-dev`)
-coverage venv="":
+check-coverage venv="":
     #!/usr/bin/env bash
     set -e
     VENV_PYTHON=$(just --quiet _get-venv-python {{ venv }})
     echo "==> Generating coverage report..."
     ${VENV_PYTHON} -m pytest --cov=xbr --cov-report=html --cov-report=term xbr/test/
     echo "--> Coverage report generated in htmlcov/"
+
+# Alias for check-coverage (backward compatibility)
+coverage venv="": (check-coverage venv)
+
+# Upgrade dependencies in a single environment (re-installs all deps to latest)
+upgrade venv="": (create venv)
+    #!/usr/bin/env bash
+    set -e
+    VENV_PYTHON=$(just --quiet _get-venv-python {{ venv }})
+    echo "==> Upgrading all dependencies..."
+    ${VENV_PYTHON} -m pip install --upgrade pip
+    ${VENV_PYTHON} -m pip install --upgrade -e '.[dev]'
+    echo "--> Dependencies upgraded"
+
+# Meta-recipe to run `upgrade` on all environments
+upgrade-all:
+    #!/usr/bin/env bash
+    set -e
+    for venv in {{ENVS}}; do
+        echo ""
+        echo "======================================================================"
+        echo "Upgrading ${venv}"
+        echo "======================================================================"
+        just upgrade ${venv}
+    done
 
 # -----------------------------------------------------------------------------
 # -- Building
@@ -458,6 +502,79 @@ publish-test venv="":
     echo "==> Publishing to Test PyPI..."
     ${VENV_PYTHON} -m twine upload --repository testpypi dist/*
     echo "--> Published to Test PyPI"
+
+# Download GitHub release artifacts (nightly or tagged release)
+download-github-release release_type="nightly":
+    #!/usr/bin/env bash
+    set -e
+    echo "==> Downloading GitHub release artifacts ({{release_type}})..."
+    rm -rf ./dist
+    mkdir -p ./dist
+    if [ "{{release_type}}" = "nightly" ]; then
+        gh release download nightly --repo wamp-proto/wamp-xbr --dir ./dist --pattern '*.whl' --pattern '*.tar.gz' || \
+            echo "Note: No nightly release found or no artifacts available"
+    else
+        gh release download "{{release_type}}" --repo wamp-proto/wamp-xbr --dir ./dist --pattern '*.whl' --pattern '*.tar.gz'
+    fi
+    echo ""
+    echo "Downloaded artifacts:"
+    ls -la ./dist/ || echo "No artifacts downloaded"
+
+# Download release artifacts from GitHub and publish to PyPI
+publish-pypi venv="" tag="": (install-tools venv)
+    #!/usr/bin/env bash
+    set -e
+    VENV_PATH="{{VENV_DIR}}/$(just --quiet _get-system-venv-name)"
+    if [ -n "{{ venv }}" ]; then
+        VENV_PATH="{{VENV_DIR}}/{{ venv }}"
+    fi
+    TAG="{{ tag }}"
+    if [ -z "${TAG}" ]; then
+        echo "Error: Please specify a tag to publish"
+        echo "Usage: just publish-pypi cpy311 v24.1.1"
+        exit 1
+    fi
+    echo "==> Publishing ${TAG} to PyPI..."
+    echo ""
+    echo "Step 1: Download release artifacts from GitHub..."
+    just download-github-release "${TAG}"
+    echo ""
+    echo "Step 2: Verify packages with twine..."
+    "${VENV_PATH}/bin/twine" check dist/*
+    echo ""
+    echo "Note: This is a pure Python package (py3-none-any wheel)."
+    echo "      auditwheel verification is not applicable (no native extensions)."
+    echo ""
+    echo "Step 3: Upload to PyPI..."
+    echo ""
+    echo "WARNING: This will upload to PyPI!"
+    echo "Press Ctrl+C to cancel, or Enter to continue..."
+    read
+    "${VENV_PATH}/bin/twine" upload dist/*
+    echo ""
+    echo "==> Successfully published ${TAG} to PyPI"
+
+# Trigger Read the Docs build for a specific tag
+publish-rtd tag="":
+    #!/usr/bin/env bash
+    set -e
+    TAG="{{ tag }}"
+    if [ -z "${TAG}" ]; then
+        echo "Error: Please specify a tag to build"
+        echo "Usage: just publish-rtd v24.1.1"
+        exit 1
+    fi
+    echo "==> Triggering Read the Docs build for ${TAG}..."
+    echo ""
+    echo "Note: Read the Docs builds are typically triggered automatically"
+    echo "      when tags are pushed to GitHub. This recipe is a placeholder"
+    echo "      for manual triggering if needed."
+    echo ""
+    echo "To manually trigger a build:"
+    echo "  1. Go to https://readthedocs.org/projects/xbr/"
+    echo "  2. Click 'Build a version'"
+    echo "  3. Select the tag: ${TAG}"
+    echo ""
 
 # -----------------------------------------------------------------------------
 # -- Makefile Integration (Solidity/Truffle targets)
