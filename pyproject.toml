@@ -114,7 +114,7 @@ zip-safe = true
 include-package-data = true
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 include = ["xbr*"]
 exclude = ["test*", "autobahn-asyncio-xbr*", "autobahn-twisted-xbr*"]
 
@@ -148,7 +148,7 @@ ignore_missing_imports = true
 
 # Pytest configuration
 [tool.pytest.ini_options]
-testpaths = ["xbr/test"]
+testpaths = ["src/xbr/test"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -156,7 +156,7 @@ addopts = "-v --tb=short"
 
 # Coverage configuration
 [tool.coverage.run]
-source = ["xbr"]
+source = ["src/xbr"]
 omit = ["*/test/*", "*/test_*.py"]
 
 [tool.coverage.report]

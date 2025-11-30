@@ -26,7 +26,7 @@ ENVS := 'cpy314 cpy313 cpy312 cpy311 pypy311'
 default:
     #!/usr/bin/env bash
     set -e
-    VERSION=$(grep '^__version__' xbr/_version.py | head -1 | sed "s/.*= *'\\(.*\\)'/\\1/")
+    VERSION=$(grep '^__version__' src/xbr/_version.py | head -1 | sed "s/.*= *'\\(.*\\)'/\\1/")
     GIT_REV=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
     echo ""
     echo "==============================================================================="
@@ -290,7 +290,7 @@ check-format venv="":
     set -e
     VENV_PYTHON=$(just --quiet _get-venv-python {{ venv }})
     echo "==> Checking code formatting with Ruff..."
-    ${VENV_PYTHON} -m ruff format --check xbr/
+    ${VENV_PYTHON} -m ruff format --check src/xbr/
     echo "--> Format check passed"
 
 # Automatically fix all formatting and code style issues.
@@ -299,7 +299,7 @@ fix-format venv="": (install-tools venv)
     set -e
     VENV_PYTHON=$(just --quiet _get-venv-python {{ venv }})
     echo "==> Auto-formatting code with Ruff..."
-    ${VENV_PYTHON} -m ruff format xbr/
+    ${VENV_PYTHON} -m ruff format src/xbr/
     echo "--> Code formatted"
 
 # Alias for fix-format (backward compatibility)
@@ -311,7 +311,7 @@ check-lint venv="":
     set -e
     VENV_PYTHON=$(just --quiet _get-venv-python {{ venv }})
     echo "==> Running Ruff linter..."
-    ${VENV_PYTHON} -m ruff check xbr/
+    ${VENV_PYTHON} -m ruff check src/xbr/
     echo "--> Linting passed"
 
 # Run static type checking with mypy
@@ -320,7 +320,7 @@ check-typing venv="":
     set -e
     VENV_PYTHON=$(just --quiet _get-venv-python {{ venv }})
     echo "==> Running type checking with mypy..."
-    ${VENV_PYTHON} -m mypy xbr/ || echo "Warning: Type checking found issues"
+    ${VENV_PYTHON} -m mypy src/xbr/ || echo "Warning: Type checking found issues"
 
 # Run all code quality checks
 check venv="": (check-format venv) (check-lint venv) (check-typing venv)
@@ -335,7 +335,7 @@ test venv="":
     set -e
     VENV_PYTHON=$(just --quiet _get-venv-python {{ venv }})
     echo "==> Running test suite with pytest..."
-    ${VENV_PYTHON} -m pytest -v xbr/test/
+    ${VENV_PYTHON} -m pytest -v src/xbr/test/
     echo "--> Tests passed"
 
 # Run tests in all environments
@@ -356,7 +356,7 @@ check-coverage venv="":
     set -e
     VENV_PYTHON=$(just --quiet _get-venv-python {{ venv }})
     echo "==> Generating coverage report..."
-    ${VENV_PYTHON} -m pytest --cov=xbr --cov-report=html --cov-report=term xbr/test/
+    ${VENV_PYTHON} -m pytest --cov=xbr --cov-report=html --cov-report=term src/xbr/test/
     echo "--> Coverage report generated in htmlcov/"
 
 # Alias for check-coverage (backward compatibility)
