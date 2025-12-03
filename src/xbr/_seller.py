@@ -362,7 +362,7 @@ class SimpleSeller(object):
                 except TransportLost:
                     self.log.warn("TransportLost while calling xbr.marketmaker.offer!")
                     break
-                except:
+                except Exception:
                     self.log.failure()
 
                 retries -= 1
@@ -473,7 +473,7 @@ class SimpleSeller(object):
 
         try:
             await d
-        except:
+        except Exception:
             self.log.failure()
         finally:
             self._state = SimpleSeller.STATE_STOPPED
