@@ -36,7 +36,8 @@ from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.threads import deferToThread
 from web3.contract import Contract
 
-from xbr import EIP712AuthorityCertificate, make_w3
+from xbr._eip712_authority_certificate import EIP712AuthorityCertificate
+from xbr._util import make_w3
 
 
 class Seeder(object):
