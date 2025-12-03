@@ -31,10 +31,11 @@ RTD_BUILD = os.environ.get('READTHEDOCS', None) == 'True'
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import sys
+
+# Add sphinxcontrib-soliditydomain from git submodule
+# This is a fork with Sphinx 8+ compatibility fixes
+sys.path.insert(0, os.path.abspath('_vendor/sphinxcontrib-soliditydomain'))
 
 
 # -- Project information -----------------------------------------------------
@@ -72,16 +73,14 @@ extensions = [
     'sphinx.ext.intersphinx',
 
     # Usage: .. thumbnail:: picture.png
-    # NOTE: Disabled - many referenced screenshots are missing from the repo
+    # NOTE: sphinxcontrib-images 0.9.4 uses deprecated 'status_iterator' removed in Sphinx 8+
     # 'sphinxcontrib.images',
-]
 
-# https://solidity-domain-for-sphinx.readthedocs.io/en/latest/index.html
-# https://github.com/cag/sphinxcontrib-soliditydomain/
-# NOTE: sphinxcontrib-soliditydomain 0.5.1 is incompatible with Sphinx 4+
-# (uses removed 'members_set_option' from sphinx.ext.autodoc)
-# Disabled until upstream fixes compatibility or a fork is available.
-# extensions.append('sphinxcontrib.soliditydomain')
+    # https://solidity-domain-for-sphinx.readthedocs.io/en/latest/index.html
+    # https://github.com/cag/sphinxcontrib-soliditydomain/
+    # Loaded from git submodule at docs/_vendor/sphinxcontrib-soliditydomain
+    'sphinxcontrib.soliditydomain',
+]
 
 # https://pythonhosted.org/sphinxcontrib-images/#how-to-configure
 images_config = {

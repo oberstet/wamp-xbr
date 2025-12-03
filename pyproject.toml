@@ -112,12 +112,13 @@ dev = [
     # Note: ty (type checker) installed via 'uv tool install ty'
 
     # Documentation
-    "sphinx>=4.0.0",
-    "sphinx-rtd-theme>=1.0.0",
+    "sphinx>=8.0.0",
+    "sphinx-rtd-theme>=3.0.0",
     "pygments-lexer-solidity>=0.7.0",
     "sphinxcontrib-images>=0.9.4",
-    # NOTE: sphinxcontrib-soliditydomain 0.5.1 is incompatible with Sphinx 4+
-    # "sphinxcontrib-soliditydomain>=0.1.0",
+    # sphinxcontrib-soliditydomain loaded from git submodule (see docs/conf.py)
+    "antlr4-python3-runtime>=4.9.0",
+    "peewee>=3.0.0",  # Required by sphinxcontrib-soliditydomain
 ]
 
 [project.urls]
