@@ -32,7 +32,7 @@ as part of RemixIDE* and we can use it to edit and share files on the local host
 
 To enable file sharing, click on the small connect icon in the top-left toolbar:
 
-.. image:: /_static/screenshots/remixide_share_hostfiles.png
+.. thumbnail:: /_static/screenshots/remixide_share_hostfiles.png
 
 A new folder "localhost" will pop up on the left side, and the log output of `remixd`
 should note a new connection (from the RemixIDE frontend):

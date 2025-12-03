@@ -115,7 +115,7 @@ dev = [
     "sphinx>=8.0.0",
     "sphinx-rtd-theme>=3.0.0",
     "pygments-lexer-solidity>=0.7.0",
-    "sphinxcontrib-images>=0.9.4",
+    "sphinxcontrib-images>=1.0.1",
     # sphinxcontrib-soliditydomain loaded from git submodule (see docs/conf.py)
     "antlr4-python3-runtime>=4.9.0",
     "peewee>=3.0.0",  # Required by sphinxcontrib-soliditydomain

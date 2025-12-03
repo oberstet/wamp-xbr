@@ -73,8 +73,7 @@ extensions = [
     'sphinx.ext.intersphinx',
 
     # Usage: .. thumbnail:: picture.png
-    # NOTE: sphinxcontrib-images 1.0.1 still uses deprecated 'status_iterator' removed in Sphinx 8+
-    # 'sphinxcontrib.images',
+    'sphinxcontrib.images',
 
     # https://solidity-domain-for-sphinx.readthedocs.io/en/latest/index.html
     # https://github.com/cag/sphinxcontrib-soliditydomain/
