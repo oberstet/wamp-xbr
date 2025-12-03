@@ -4,7 +4,8 @@ XBR Authentication
 Overview
 --------
 
-.. thumbnail:: _static/wamp-xbr-auth.png
+.. FIXME: image file missing
+.. .. thumbnail:: _static/wamp-xbr-auth.png
 
 Argon2
 ------

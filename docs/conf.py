@@ -71,13 +71,17 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
 
-    # https://solidity-domain-for-sphinx.readthedocs.io/en/latest/index.html
-    # https://github.com/cag/sphinxcontrib-soliditydomain/
-    'sphinxcontrib.soliditydomain',
-
     # Usage: .. thumbnail:: picture.png
-    'sphinxcontrib.images',
+    # NOTE: Disabled - many referenced screenshots are missing from the repo
+    # 'sphinxcontrib.images',
 ]
+
+# https://solidity-domain-for-sphinx.readthedocs.io/en/latest/index.html
+# https://github.com/cag/sphinxcontrib-soliditydomain/
+# NOTE: sphinxcontrib-soliditydomain 0.5.1 is incompatible with Sphinx 4+
+# (uses removed 'members_set_option' from sphinx.ext.autodoc)
+# Disabled until upstream fixes compatibility or a fork is available.
+# extensions.append('sphinxcontrib.soliditydomain')
 
 # https://pythonhosted.org/sphinxcontrib-images/#how-to-configure
 images_config = {
@@ -137,7 +141,7 @@ else:
 
         # add custom CSS on top of Sphinx RTD standard CSS
         def setup(app):
-            app.add_stylesheet('css/custom.css')
+            app.add_css_file('css/custom.css')
     else:
         html_theme = 'default'
 
