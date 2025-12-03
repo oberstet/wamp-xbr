@@ -73,7 +73,7 @@ extensions = [
     'sphinx.ext.intersphinx',
 
     # Usage: .. thumbnail:: picture.png
-    # NOTE: sphinxcontrib-images 0.9.4 uses deprecated 'status_iterator' removed in Sphinx 8+
+    # NOTE: sphinxcontrib-images 1.0.1 still uses deprecated 'status_iterator' removed in Sphinx 8+
     # 'sphinxcontrib.images',
 
     # https://solidity-domain-for-sphinx.readthedocs.io/en/latest/index.html
@@ -116,7 +116,7 @@ language = 'en'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '_work']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '_work', '_vendor']
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -136,7 +136,7 @@ if RTD_BUILD:
 else:
     if sphinx_rtd_theme:
         html_theme = 'sphinx_rtd_theme'
-        html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+        # Note: html_theme_path no longer needed with modern sphinx-rtd-theme
 
         # add custom CSS on top of Sphinx RTD standard CSS
         def setup(app):

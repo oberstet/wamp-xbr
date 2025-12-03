@@ -62,7 +62,7 @@ and start Ganache GUI
 Ganache per default will listen (blockchain node RPC endpoint) on ``http://127.0.0.1:7545``.
 Here is a screenshot of Ganache GUI with Remix IDE connected:
 
-.. thumbnail:: /_static/screenshots/xbr_payment_channel.png
+.. image:: /_static/screenshots/xbr_payment_channel.png
 
 
 Running Ganache CLI

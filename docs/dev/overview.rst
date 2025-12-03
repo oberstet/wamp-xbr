@@ -45,4 +45,5 @@ Data Consumers
 3. `XBRNetwork.openPaymentChannel` to open a payment channel, depositing an amount of XBR token. this returns a new :sol:contract:`XBRChannel` SC
 4. `XBRChannel.close` to close a payment channel.
 
-.. thumbnail:: /_static/gen/xbr_consumer_interactions.svg
+.. FIXME: image missing
+.. .. thumbnail:: /_static/gen/xbr_consumer_interactions.svg
