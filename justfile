@@ -238,14 +238,15 @@ install-dev venv="":
     ${VENV_PYTHON} -m pip install -e '.[dev]'
     echo "--> Installed xbr[dev] in editable mode"
 
-# Install development tools (ruff, mypy, sphinx, etc.)
+# Install development tools (ruff, sphinx, etc.) - ty installed separately via uv tool
 install-tools venv="":
     #!/usr/bin/env bash
     set -e
     VENV_PYTHON=$(just --quiet _get-venv-python {{ venv }})
     echo "==> Installing development tools..."
-    ${VENV_PYTHON} -m pip install ruff mypy pytest sphinx twine build
+    ${VENV_PYTHON} -m pip install ruff pytest sphinx twine build
     echo "--> Installed development tools"
+    echo "    Note: ty (type checker) should be installed via 'uv tool install ty'"
 
 # Install minimal build tools for building wheels
 install-build-tools venv="":
@@ -314,13 +315,12 @@ check-lint venv="":
     ${VENV_PYTHON} -m ruff check src/xbr/
     echo "--> Linting passed"
 
-# Run static type checking with mypy
+# Run static type checking with ty (Astral's Rust-based type checker)
 check-typing venv="":
     #!/usr/bin/env bash
     set -e
-    VENV_PYTHON=$(just --quiet _get-venv-python {{ venv }})
-    echo "==> Running type checking with mypy..."
-    ${VENV_PYTHON} -m mypy src/xbr/ || echo "Warning: Type checking found issues"
+    echo "==> Running type checking with ty..."
+    ty check src/xbr/ || echo "Warning: Type checking found issues"
 
 # Run all code quality checks
 check venv="": (check-format venv) (check-lint venv) (check-typing venv)

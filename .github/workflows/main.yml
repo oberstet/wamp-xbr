@@ -1,11 +1,6 @@
-# GitHub actions for XBR Protocol CI/CD
-# https://github.com/crossbario/xbr-protocol/actions
-#
-# See also:
-#
-#   * https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-#   * https://github.com/actions/starter-workflows/blob/main/ci/python-package.yml
-#
+# GitHub Actions workflow for XBR Protocol CI/CD
+# https://github.com/wamp-proto/wamp-xbr/actions
+
 name: main
 
 on:
@@ -17,133 +12,121 @@ on:
       - master
 
 jobs:
+  identifiers:
+    name: Identifiers
+    # GitHub needs to know where .cicd/workflows/identifiers.yml lives at parse time,
+    # and submodules aren't included in that context! thus the following does NOT work:
+    # uses: ./.cicd/workflows/identifiers.yml
+    # we MUST reference the remote repo directly:
+    uses: wamp-proto/wamp-cicd/.github/workflows/identifiers.yml@main
+    # IMPORTANT: we still need .cicd as a Git submodule in the using repo though!
+    # because e.g. identifiers.yml wants to access scripts/sanitize.sh !
+
   check:
-    runs-on: ubuntu-20.04
+    name: Code Quality
+    needs: identifiers
+    runs-on: ubuntu-24.04
 
     env:
-      XBR_HDWALLET_SEED: ${{ secrets.XBR_HDWALLET_SEED }}
+      BASE_REPO: ${{ needs.identifiers.outputs.base_repo }}
+      BASE_BRANCH: ${{ needs.identifiers.outputs.base_branch }}
+      PR_NUMBER: ${{ needs.identifiers.outputs.pr_number }}
+      PR_REPO: ${{ needs.identifiers.outputs.pr_repo }}
+      PR_BRANCH: ${{ needs.identifiers.outputs.pr_branch }}
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Install OS dependencies
-      run: |
-        sudo apt update
-        sudo apt install cloc
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
 
-    # https://github.com/actions/setup-node
-    - name: Set up Node
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
+      - name: Set up Python 3.11
+        run: uv python install 3.11
 
-    - name: Set up Python 3
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-        architecture: 'x64'
+      - name: Install just
+        uses: extractions/setup-just@v3
 
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements-dev.txt
+      - name: Install ty (Astral type checker)
+        run: uv tool install ty
 
-    - name: Install Node dependencies
-      run: |
-        npm install --only=dev
+      - name: Create venv and install dev dependencies
+        run: |
+          just create cpy311
+          just install-dev cpy311
 
-    # https://www.scivision.dev/github-actions-path-append/
-    # https://github.com/actions/toolkit/blob/main/docs/commands.md#path-manipulation
-    # https://docs.github.com/en/free-pro-team@latest/actions/reference/environment-variables#default-environment-variables
-    - name: Set environment
-      run: |
-        echo "${HOME}/.local/bin" >> $GITHUB_PATH
-        echo "${GITHUB_WORKSPACE}/node_modules/.bin" >> $GITHUB_PATH
-        echo BUILD_DATE=`date --utc "+%Y%m%d"` >> $GITHUB_ENV
-        echo XBR_PROTOCOL_VERSION=`grep '"version":' ./package.json -m1 | cut -d\" -f4` >> $GITHUB_ENV
-        echo XBR_PROTOCOL_VCS_REF=`git --git-dir="./.git" rev-list -n 1 v${XBR_PROTOCOL_VERSION} --abbrev-commit` >> $GITHUB_ENV
+      - name: Run code quality checks
+        run: just check cpy311
 
-    - name: Print environment
-      run: |
-        echo ""
-        echo "Build environment configured:"
-        echo ""
-        echo "  PATH                    = ${PATH}"
-        echo "  BUILD_DATE              = ${BUILD_DATE}"
-        echo "  XBR_PROTOCOL_VERSION    = ${XBR_PROTOCOL_VERSION}"
-        echo "  XBR_PROTOCOL_VCS_REF    = ${XBR_PROTOCOL_VCS_REF}"
-        echo "  XBR_HDWALLET_SEED       = ${XBR_HDWALLET_SEED}"
-        echo ""
-        which python
-        python -V
-        which node
-        node --version
-        which truffle
-        truffle version
-        which ganache-cli
-        ganache-cli --version
-        which solhint
-        solhint --version
+  test:
+    name: Test Suite
+    needs: identifiers
+    runs-on: ${{ matrix.os }}
 
-    - name: Run Solhint
-      run: tox -c tox.ini -e solhint
+    env:
+      BASE_REPO: ${{ needs.identifiers.outputs.base_repo }}
+      BASE_BRANCH: ${{ needs.identifiers.outputs.base_branch }}
+      PR_NUMBER: ${{ needs.identifiers.outputs.pr_number }}
+      PR_REPO: ${{ needs.identifiers.outputs.pr_repo }}
+      PR_BRANCH: ${{ needs.identifiers.outputs.pr_branch }}
 
-    - name: Run Truffle build
-      run: tox -c tox.ini -e truffle-build
+    strategy:
+      matrix:
+        os: [ubuntu-24.04]
+        env: ['cpy311', 'cpy312', 'cpy313']
 
-    # https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets#using-encrypted-secrets-in-a-workflow
-    - name: Run Truffle test
-      run: |
-        ganache-cli --accounts 15 --defaultBalanceEther 1000 \
-          --mnemonic "$XBR_HDWALLET_SEED" \
-          --gasLimit 0xfffffffffff --gasPrice 1 --port 1545 --networkId 5777 &
-        sleep 5
-        truffle migrate --reset --network ganache
-        tox -c tox.ini -e truffle-test
+    continue-on-error: false
 
-    - name: Build Python package
-      run: |
-        make compile
-        python setup.py sdist bdist_wheel --universal
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    # FIXME: sth is broken rgd keys when run under "coverage" ..
-    # - name: Run Coverage
-    #   run: tox -c tox.ini -e coverage
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install just
+        uses: extractions/setup-just@v3
+
+      - name: Create venv and install dependencies
+        run: |
+          just create ${{ matrix.env }}
+          just install-dev ${{ matrix.env }}
+
+      - name: Run tests
+        run: just test ${{ matrix.env }}
 
   docs:
-    runs-on: ubuntu-20.04
+    name: Documentation
+    needs: identifiers
+    runs-on: ubuntu-24.04
+
+    env:
+      BASE_REPO: ${{ needs.identifiers.outputs.base_repo }}
+      BASE_BRANCH: ${{ needs.identifiers.outputs.base_branch }}
+      PR_NUMBER: ${{ needs.identifiers.outputs.pr_number }}
+      PR_REPO: ${{ needs.identifiers.outputs.pr_repo }}
+      PR_BRANCH: ${{ needs.identifiers.outputs.pr_branch }}
+
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Install OS dependencies
-      run: |
-        sudo apt update
-        sudo apt install libenchant-dev
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
 
-    - name: Set up Python 3
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-        architecture: 'x64'
+      - name: Set up Python 3.11
+        run: uv python install 3.11
 
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements-dev.txt
+      - name: Install just
+        uses: extractions/setup-just@v3
 
-    - name: Set environment
-      run: |
-        echo XBR_PROTOCOL_VERSION=`grep '"version":' ./package.json -m1 | cut -d\" -f4` >> $GITHUB_ENV
-        echo XBR_PROTOCOL_VCS_REF=`git --git-dir="./.git" rev-list -n 1 v${XBR_PROTOCOL_VERSION} --abbrev-commit` >> $GITHUB_ENV
+      - name: Create venv and install dependencies
+        run: |
+          just create cpy311
+          just install-dev cpy311
 
-    - name: Print environment
-      run: |
-        echo ""
-        echo "Environment configured:"
-        echo ""
-        echo "  XBR_PROTOCOL_VERSION    = ${XBR_PROTOCOL_VERSION}"
-        echo "  XBR_PROTOCOL_VCS_REF    = ${XBR_PROTOCOL_VCS_REF}"
-        echo ""
-
-    - name: Run Sphinx
-      run: tox -c tox.ini -e sphinx
+      - name: Build documentation
+        run: just docs cpy311
