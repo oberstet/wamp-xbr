@@ -24,8 +24,7 @@
 #
 ###############################################################################
 
-from ._eip712_base import sign, recover, is_address, is_eth_privkey, \
-    is_signature, is_cs_pubkey
+from ._eip712_base import is_address, is_cs_pubkey, is_eth_privkey, is_signature, recover, sign
 
 
 def _create_eip712_market_member_login(member: bytes, client_pubkey: bytes) -> dict:
@@ -33,37 +32,28 @@ def _create_eip712_market_member_login(member: bytes, client_pubkey: bytes) -> d
     assert is_cs_pubkey(client_pubkey)
 
     data = {
-        'types': {
-            'EIP712Domain': [
+        "types": {
+            "EIP712Domain": [
+                {"name": "name", "type": "string"},
+                {"name": "version", "type": "string"},
+            ],
+            "EIP712MarketMemberLogin": [
+                {"name": "member", "type": "address"},
                 {
-                    'name': 'name',
-                    'type': 'string'
-                },
-                {
-                    'name': 'version',
-                    'type': 'string'
+                    "name": "client_pubkey",
+                    "type": "bytes32",
                 },
             ],
-            'EIP712MarketMemberLogin': [
-                {
-                    'name': 'member',
-                    'type': 'address'
-                },
-                {
-                    'name': 'client_pubkey',
-                    'type': 'bytes32',
-                },
-            ]
         },
-        'primaryType': 'EIP712MarketMemberLogin',
-        'domain': {
-            'name': 'XBR',
-            'version': '1',
+        "primaryType": "EIP712MarketMemberLogin",
+        "domain": {
+            "name": "XBR",
+            "version": "1",
         },
-        'message': {
-            'member': member,
-            'client_pubkey': client_pubkey,
-        }
+        "message": {
+            "member": member,
+            "client_pubkey": client_pubkey,
+        },
     }
 
     return data
