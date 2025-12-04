@@ -24,8 +24,9 @@
 #
 ###############################################################################
 
-from typing import Dict, Any
 from binascii import a2b_hex
+from typing import Any, Dict
+
 from py_eth_sig_utils import signing
 
 _EIP712_SIG_LEN = 32 + 32 + 1

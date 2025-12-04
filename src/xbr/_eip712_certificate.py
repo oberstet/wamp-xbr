@@ -26,7 +26,6 @@
 
 
 class EIP712Certificate(object):
-
     def __init__(self, chainId: int, verifyingContract: bytes, validFrom: int):
         self.chainId = chainId
         self.verifyingContract = verifyingContract
@@ -36,5 +35,5 @@ class EIP712Certificate(object):
         raise NotImplementedError()
 
     @staticmethod
-    def parse(data) -> 'EIP712Certificate':
+    def parse(data) -> "EIP712Certificate":
         raise NotImplementedError()

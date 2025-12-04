@@ -26,6 +26,7 @@
 
 import hashlib
 from typing import Optional
+
 import argon2
 import hkdf
 
@@ -54,12 +55,12 @@ def stretch_argon2_secret(email: str, password: str, salt: Optional[bytes] = Non
     """
     if not salt:
         m = hashlib.sha256()
-        m.update(email.encode('utf8'))
+        m.update(email.encode("utf8"))
         salt = m.digest()[:16]
     assert len(salt) == 16
 
     pkm = argon2.low_level.hash_secret_raw(
-        secret=password.encode('utf8'),
+        secret=password.encode("utf8"),
         salt=salt,
         time_cost=4096,
         memory_cost=512,
@@ -99,11 +100,11 @@ def pkm_from_argon2_secret(email: str, password: str, context: str, salt: Option
     """
     if not salt:
         m = hashlib.sha256()
-        m.update(email.encode('utf8'))
+        m.update(email.encode("utf8"))
         salt = m.digest()[:16]
     assert len(salt) == 16
 
-    context = context.encode('utf8')
+    context = context.encode("utf8")
 
     pkm = stretch_argon2_secret(email=email, password=password, salt=salt)
     key = expand_argon2_secret(pkm=pkm, context=context, salt=salt)

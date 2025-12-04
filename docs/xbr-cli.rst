@@ -122,15 +122,18 @@ in Chrome and Firefox.
 
 First step is to install MetaMask, creating a new wallet:
 
-.. thumbnail:: _static/screenshots/xbr-metamask-1.png
+.. FIXME: screenshot missing
+.. .. thumbnail:: _static/screenshots/xbr-metamask-1.png
 
 and connect to `Rinkeby testnet <https://www.rinkeby.io/>`__:
 
-.. thumbnail:: _static/screenshots/xbr-metamask-2.png
+.. FIXME: screenshot missing
+.. .. thumbnail:: _static/screenshots/xbr-metamask-2.png
 
 Then, to use your Ethereum private key with the XBR CLI, export the private key:
 
-.. thumbnail:: _static/screenshots/xbr-metamask-3.png
+.. FIXME: screenshot missing
+.. .. thumbnail:: _static/screenshots/xbr-metamask-3.png
 
 When using the XBR CLI, you can provide your Ethereum private key using the command line argument ``--ethkey=0x``
 appended with your key:
@@ -159,7 +162,8 @@ profiles you have there:
 
 Finally, for testing on Rinkeby, get yourself some Ether from the `Rinkeby faucet <https://faucet.rinkeby.io/>`__:
 
-.. thumbnail:: _static/screenshots/rinkeby-faucet.png
+.. FIXME: screenshot missing
+.. .. thumbnail:: _static/screenshots/rinkeby-faucet.png
 
 If you want to use the accounts from your MetaMask wallet derived from your wallet's seedphrase, you can
 use a helper included with Autobahn to derive private keys for all accounts, eg account `0`:
@@ -245,7 +249,8 @@ Before you have registered in the XBR Network, this is what you get:
 
     $ xbrnetwork get-member
 
-.. thumbnail:: _static/screenshots/xbr-cli-not-a-member-yet.png
+.. FIXME: screenshot missing
+.. .. thumbnail:: _static/screenshots/xbr-cli-not-a-member-yet.png
 
 On-boarding
 -----------
@@ -369,13 +374,15 @@ configured to use XBR as a means of payment).
 
 Transfering XBR tokens looks like this
 
-.. thumbnail:: _static/screenshots/xbr-token-transfer.png
+.. FIXME: screenshot missing
+.. .. thumbnail:: _static/screenshots/xbr-token-transfer.png
 
 This transfer of 1000 XBR to some target address did cost 0.001541 ETH (or 0.33 EUR) on Rinkeby testnet.
 
 After the transfer (to that member), the member information returned will look like this:
 
-.. thumbnail:: _static/screenshots/xbr-token-transfer-after.png
+.. FIXME: screenshot missing
+.. .. thumbnail:: _static/screenshots/xbr-token-transfer-after.png
 
 
 Getting market information
