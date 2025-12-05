@@ -1,6 +1,0 @@
-include LICENSE
-recursive-include xbr/contract *.sol
-recursive-include xbr/abi *.json
-recursive-include xbr/templates *
-recursive-include xbr/test/catalog/schema *
-recursive-include xbr/test/profile *

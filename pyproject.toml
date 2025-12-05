@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "xbr"
-dynamic = ["version"]
+version = "25.12.1"
 description = "XBR smart contracts and ABIs"
 readme = "README.rst"
 license = "Apache-2.0"
@@ -128,17 +128,35 @@ Documentation = "https://xbr.network/docs"
 Changelog = "https://github.com/wamp-proto/wamp-xbr/blob/master/CHANGELOG.md"
 Issues = "https://github.com/wamp-proto/wamp-xbr/issues"
 
-[tool.setuptools]
-zip-safe = true
-include-package-data = true
+# Hatchling build configuration
+[tool.hatch.build.targets.wheel]
+packages = ["src/xbr"]
 
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["xbr*"]
-exclude = ["test*", "autobahn-asyncio-xbr*", "autobahn-twisted-xbr*"]
+# Include non-Python files in the wheel
+[tool.hatch.build.targets.wheel.force-include]
+# Include py.typed marker
+"src/xbr/py.typed" = "xbr/py.typed"
+# Include templates directory
+"src/xbr/templates" = "xbr/templates"
+# Include ABI files (compiled Solidity contracts)
+"build/contracts" = "xbr/abi"
+# Include Solidity contract source files
+"contracts" = "xbr/contract"
 
-[tool.setuptools.dynamic]
-version = {attr = "xbr._version.__version__"}
+[tool.hatch.build.targets.sdist]
+# By default, hatchling includes all git-tracked files
+# Exclude build artifacts from sdist
+exclude = [
+    "/.github",
+    "/docs/_build",
+    "/.venvs",
+    "/.uv-cache",
+    "/.coverage",
+    "/.pytest_cache",
+    "/.mypy_cache",
+    "/.ruff_cache",
+    "/node_modules",
+]
 
 # Ruff configuration (replaces flake8, black, yapf)
 [tool.ruff]
