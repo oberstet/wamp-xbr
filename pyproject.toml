@@ -132,16 +132,15 @@ Issues = "https://github.com/wamp-proto/wamp-xbr/issues"
 [tool.hatch.build.targets.wheel]
 packages = ["src/xbr"]
 
-# Include non-Python files in the wheel
-[tool.hatch.build.targets.wheel.force-include]
-# Include py.typed marker
-"src/xbr/py.typed" = "xbr/py.typed"
-# Include templates directory
-"src/xbr/templates" = "xbr/templates"
-# Include ABI files (compiled Solidity contracts)
-"build/contracts" = "xbr/abi"
-# Include Solidity contract source files
-"contracts" = "xbr/contract"
+# Note: Non-Python files (templates, abi, contract) are included automatically
+# via the src/xbr directory which contains symlinks to these resources.
+# The symlinks are:
+#   src/xbr/abi -> ../../build/contracts (compiled Solidity ABIs)
+#   src/xbr/contract -> ../../contracts (Solidity source files)
+#   src/xbr/templates -> templates directory
+#
+# For wheel builds, compile contracts first with: just compile-contracts
+# This creates build/contracts/ which the abi symlink points to.
 
 [tool.hatch.build.targets.sdist]
 # By default, hatchling includes all git-tracked files
