@@ -80,6 +80,12 @@ myst_enable_extensions = [
 ]
 myst_heading_anchors = 3
 
+# -- AutoAPI Configuration ---------------------------------------------------
+autoclass_content = "both"
+autodoc_member_order = "bysource"
+autoapi_options = ["members", "show-inheritance"]
+autoapi_dirs = ["../src/xbr"]
+
 # -- Intersphinx Configuration -----------------------------------------------
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
