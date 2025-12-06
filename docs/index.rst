@@ -29,6 +29,7 @@ Contents
    xbr-cli
    faq
    legal
+   ai/index
 
 
 Indices and tables
