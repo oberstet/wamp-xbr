@@ -143,6 +143,7 @@ else:
     else:
         html_theme = 'default'
 
+# Logo (optimized SVG generated from docs/_graphics/ by `just _build-images`)
 html_logo = '_static/img/xbr.svg'
 full_logo = True
 

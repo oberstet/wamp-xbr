@@ -112,6 +112,7 @@ dev = [
     # Note: ty (type checker) installed via 'uv tool install ty'
 
     # Documentation
+    "scour>=0.38",  # SVG optimizer for documentation logos
     "sphinx>=8.0.0",
     "sphinx-rtd-theme>=3.0.0",
     "pygments-lexer-solidity>=0.7.0",
