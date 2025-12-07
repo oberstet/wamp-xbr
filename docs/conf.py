@@ -99,27 +99,32 @@ intersphinx_cache_limit = 5
 html_theme = "furo"
 html_title = f"{project} {release}"
 
-# Furo theme options with Noto fonts
+# Furo theme options with Noto fonts and WAMP subarea colors
 html_theme_options = {
     # Source repository links
     "source_repository": "https://github.com/wamp-proto/wamp-xbr/",
     "source_branch": "master",
     "source_directory": "docs/",
 
-    # Noto fonts from Google Fonts
+    # Noto fonts and WAMP Dark Anthracite (#1a1a1a) accent color
     "light_css_variables": {
         "font-stack": "'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         "font-stack--monospace": "'Noto Sans Mono', SFMono-Regular, Menlo, Consolas, monospace",
+        "color-brand-primary": "#1a1a1a",
+        "color-brand-content": "#1a1a1a",
     },
     "dark_css_variables": {
         "font-stack": "'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         "font-stack--monospace": "'Noto Sans Mono', SFMono-Regular, Menlo, Consolas, monospace",
+        "color-brand-primary": "#e0e0e0",
+        "color-brand-content": "#e0e0e0",
     },
 }
 
-# Logo (optimized SVG generated from docs/_graphics/ by `just _build-images`)
-html_logo = "_static/img/xbr.svg"
-html_favicon = "_static/img/favicon.ico"
+# Logo and favicon (synced from wamp-proto by `just sync-images`)
+# Uses the WAMP logo for WAMP ecosystem projects
+html_logo = "_static/img/wamp_logo.svg"
+html_favicon = "_static/favicon.ico"
 
 # Static files
 html_static_path = ["_static"]
@@ -149,5 +154,6 @@ todo_include_todos = True
 add_module_names = False
 autosectionlabel_prefix_document = True
 pygments_style = "sphinx"
+pygments_dark_style = "monokai"
 autoclass_content = "both"
 autodoc_member_order = "bysource"

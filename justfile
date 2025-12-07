@@ -570,43 +570,40 @@ install-docs venv="": (create venv)
     echo "==> Installing documentation tools in ${VENV_NAME}..."
     ${VENV_PYTHON} -m pip install -e .[docs]
 
-# Build optimized SVGs from docs/_graphics/*.svg using scour
-_build-images venv="": (install-docs venv)
+# Sync images (logo and favicon) from wamp-proto (WAMP subarea source)
+sync-images:
     #!/usr/bin/env bash
     set -e
-    VENV_PYTHON=$(just --quiet _get-venv-python {{ venv }})
-    VENV_NAME="{{ venv }}"
-    if [ -z "${VENV_NAME}" ]; then
-        VENV_NAME=$(just --quiet _get-system-venv-name)
-    fi
-    VENV_PATH="{{VENV_DIR}}/${VENV_NAME}"
 
-    SOURCEDIR="{{ PROJECT_DIR }}/docs/_graphics"
-    TARGETDIR="{{ PROJECT_DIR }}/docs/_static/img"
+    SOURCEDIR="{{ PROJECT_DIR }}/../wamp-proto/docs/_static"
+    TARGETDIR="{{ PROJECT_DIR }}/docs/_static"
+    IMGDIR="${TARGETDIR}/img"
 
-    echo "==> Building optimized SVG images..."
-    mkdir -p "${TARGETDIR}"
+    echo "==> Syncing images from wamp-proto..."
+    mkdir -p "${IMGDIR}"
 
-    if [ -d "${SOURCEDIR}" ]; then
-        find "${SOURCEDIR}" -name "*.svg" -type f | while read -r source_file; do
-            filename=$(basename "${source_file}")
-            target_file="${TARGETDIR}/${filename}"
-            echo "  Processing: ${filename}"
-            "${VENV_PATH}/bin/scour" \
-                --remove-descriptive-elements \
-                --enable-comment-stripping \
-                --enable-viewboxing \
-                --indent=none \
-                --no-line-breaks \
-                --shorten-ids \
-                "${source_file}" "${target_file}"
-        done
+    # Copy optimized logo SVG (WAMP logo)
+    if [ -f "${SOURCEDIR}/img/wamp_logo.svg" ]; then
+        cp "${SOURCEDIR}/img/wamp_logo.svg" "${IMGDIR}/"
+        echo "  Copied: wamp_logo.svg"
+    else
+        echo "  Warning: wamp_logo.svg not found in wamp-proto"
+        echo "  Run 'just optimize-images' in wamp-proto first"
     fi
 
-    echo "==> Done building images."
+    # Copy favicon
+    if [ -f "${SOURCEDIR}/img/favicon.ico" ]; then
+        cp "${SOURCEDIR}/img/favicon.ico" "${TARGETDIR}/"
+        echo "  Copied: favicon.ico"
+    else
+        echo "  Warning: favicon.ico not found in wamp-proto"
+        echo "  Run 'just optimize-images' in wamp-proto first"
+    fi
+
+    echo "==> Image sync complete."
 
 # Build HTML documentation using Sphinx
-docs venv="": (_build-images venv)
+docs venv="": (sync-images)
     #!/usr/bin/env bash
     set -e
     VENV_PYTHON=$(just --quiet _get-venv-python {{ venv }})
