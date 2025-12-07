@@ -29,3 +29,4 @@ docker/data
 .coverage_artifacts/
 
 .openzeppelin/.session
+.build
