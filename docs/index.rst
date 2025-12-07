@@ -29,6 +29,7 @@ Contents
    xbr-cli
    faq
    legal
+   OVERVIEW.md
    ai/index
 
 
