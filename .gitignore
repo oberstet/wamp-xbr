@@ -4,6 +4,7 @@ build
 .pytest_cache
 .venv
 docs/_build/
+docs/autoapi/
 *.pid
 teststack/ganache/.data/
 key.*
@@ -29,4 +30,4 @@ docker/data
 .coverage_artifacts/
 
 .openzeppelin/.session
-.build
+.build/
