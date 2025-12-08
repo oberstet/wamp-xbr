@@ -11,7 +11,7 @@ monetization of data and data-driven microservices between different parties.
 The protocol is implemented in *smart contracts* written in
 `Solidity <https://solidity.readthedocs.io>`__ for the
 `Ethereum blockchain <https://ethereum.org/>`__, and is
-`Apache 2.0 <https://github.com/wamp-proto/wamp-xbr/blob/master/LICENSE>`__ licensed.
+`MIT <https://github.com/wamp-proto/wamp-xbr/blob/master/LICENSE>`__ licensed.
 
 
 Contents
@@ -31,3 +31,8 @@ Contents
    legal
    OVERVIEW.md
    ai/index
+
+--------------
+
+*Copyright (c) typedef int GmbH. Licensed under the* `MIT License <https://github.com/wamp-proto/wamp-xbr/blob/master/LICENSE>`__.
+*WAMP, Autobahn, Crossbar.io and XBR are trademarks of typedef int GmbH (Germany).*

@@ -7,7 +7,7 @@ name = "xbr"
 version = "25.12.1"
 description = "XBR smart contracts and ABIs"
 readme = "README.rst"
-license = "Apache-2.0"
+license = "MIT"
 authors = [
     {name = "typedef int GmbH", email = "autobahnws@googlegroups.com"}
 ]
