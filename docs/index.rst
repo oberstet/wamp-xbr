@@ -1,5 +1,5 @@
-The XBR Protocol
-================
+WAMP XBR Decentralized Messaging Extension
+==========================================
 
 **XBR** (Cross-Bar Resource) is a protocol for secure peer-to-peer data-trading
 and service microtransactions in `Open Data Markets <https://xbr.network>`__.
