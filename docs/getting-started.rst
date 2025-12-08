@@ -39,6 +39,40 @@ Basic Concepts
 **Membership**
     Participant registration in data markets
 
+FAQ
+---
+
+**What Blockchain options do I have?**
+
+* **Local Development Network**: For testing and development
+* **Public Ethereum Networks**: Mainnet and testnets
+* **Infura**: Managed Ethereum node service
+* **QuikNode**: High-performance dedicated nodes (https://quiknode.io/)
+* **Running your own Node**: We recommend `Go Ethereum ("geth") <https://geth.ethereum.org/>`__
+
+For a full geth node on a testnet, minimum requirements are:
+
+* 4GB RAM, 50GB disk (e.g. AWS EC2 ``t3.medium``)
+* Full sync time: approximately 4 hours
+
+**Why run your own (public) Ethereum node?**
+
+* Avoid queues to public/shared nodes during high-traffic periods
+* Higher chance of transactions being mined quickly
+* Event monitors for customized block explorers need complete transaction logs
+* Queue and cache batches of transactions
+
+**What are the gas costs for XBR operations?**
+
+Gas costs vary based on network conditions. See the XBR documentation for
+current estimates.
+
+**How to resolve MetaMask error "tx doesn't have the correct nonce"?**
+
+If running a test blockchain that was restarted from blank state, MetaMask
+caches information about the network including completed transactions.
+Clear this cache by selecting a different network in MetaMask or reinstalling.
+
 Next Steps
 ----------
 

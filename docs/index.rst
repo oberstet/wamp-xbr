@@ -27,8 +27,6 @@ Contents
    releases
    changelog
    contributing
-   faq
-   legal
    OVERVIEW.md
    ai/index
 
