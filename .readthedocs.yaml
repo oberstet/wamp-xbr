@@ -8,6 +8,9 @@ build:
   os: ubuntu-24.04
   tools:
     python: "3.11"
+  # Install system packages for spell checking
+  apt_packages:
+    - libenchant-2-2
   # Required for sphinxcontrib-soliditydomain submodule
   submodules:
     include: all
@@ -19,8 +22,8 @@ sphinx:
 
 python:
   install:
-    # Install the package with dev dependencies (includes docs tools)
+    # Install the package with docs dependencies
     - method: pip
       path: .
       extra_requirements:
-        - dev
+        - docs
