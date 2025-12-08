@@ -852,3 +852,143 @@ ganache-run:
 # Initialize Ganache with test data (wrapper for `make init_ganache`)
 ganache-init:
     just make init_ganache
+
+
+# -----------------------------------------------------------------------------
+# -- Release workflow recipes
+# -----------------------------------------------------------------------------
+
+# Generate changelog entry from git history for a given version
+prepare-changelog version:
+    #!/usr/bin/env bash
+    set -e
+    VERSION="{{ version }}"
+
+    echo ""
+    echo "=========================================="
+    echo " Generating changelog for version ${VERSION}"
+    echo "=========================================="
+    echo ""
+
+    # Find the previous tag
+    PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+    if [ -z "${PREV_TAG}" ]; then
+        echo "No previous tag found. Showing all commits..."
+        git log --oneline --no-decorate | head -50
+    else
+        echo "Commits since ${PREV_TAG}:"
+        echo ""
+        git log --oneline --no-decorate "${PREV_TAG}..HEAD" | head -50
+    fi
+
+    echo ""
+    echo "=========================================="
+    echo " Suggested changelog format:"
+    echo "=========================================="
+    echo ""
+    echo "${VERSION}"
+    echo "------"
+    echo ""
+    echo "**New**"
+    echo ""
+    echo "* new: <feature description>"
+    echo ""
+    echo "**Fix**"
+    echo ""
+    echo "* fix: <fix description>"
+    echo ""
+    echo "**Other**"
+    echo ""
+    echo "* other: <other changes>"
+    echo ""
+
+# Validate release is ready: checks changelog, releases, version
+draft-release version:
+    #!/usr/bin/env bash
+    set -e
+    VERSION="{{ version }}"
+
+    echo ""
+    echo "=========================================="
+    echo " Validating release ${VERSION}"
+    echo "=========================================="
+    echo ""
+
+    ERRORS=0
+
+    # Check package.json version (wamp-xbr uses package.json)
+    PACKAGE_VERSION=$(grep '"version"' package.json | head -1 | sed 's/.*: *"\(.*\)".*/\1/')
+    if [ "${PACKAGE_VERSION}" = "${VERSION}" ]; then
+        echo "✅ package.json version matches: ${VERSION}"
+    else
+        echo "❌ package.json version mismatch: ${PACKAGE_VERSION} != ${VERSION}"
+        ERRORS=$((ERRORS + 1))
+    fi
+
+    # Check changelog entry
+    if grep -q "^${VERSION}$" docs/changelog.rst; then
+        echo "✅ Changelog entry exists for ${VERSION}"
+    else
+        echo "❌ Changelog entry missing for ${VERSION}"
+        ERRORS=$((ERRORS + 1))
+    fi
+
+    # Check releases entry
+    if grep -q "^${VERSION}$" docs/releases.rst; then
+        echo "✅ Releases entry exists for ${VERSION}"
+    else
+        echo "❌ Releases entry missing for ${VERSION}"
+        ERRORS=$((ERRORS + 1))
+    fi
+
+    echo ""
+    if [ ${ERRORS} -gt 0 ]; then
+        echo "=========================================="
+        echo " ❌ Validation failed with ${ERRORS} error(s)"
+        echo "=========================================="
+        exit 1
+    else
+        echo "=========================================="
+        echo " ✅ All checks passed for ${VERSION}"
+        echo "=========================================="
+    fi
+
+# Full release preparation: validate + test + build docs
+prepare-release version venv="":
+    #!/usr/bin/env bash
+    set -e
+    VERSION="{{ version }}"
+    VENV="{{ venv }}"
+
+    echo ""
+    echo "=========================================="
+    echo " Preparing release ${VERSION}"
+    echo "=========================================="
+    echo ""
+
+    # Run draft-release validation first
+    just draft-release "${VERSION}"
+
+    echo ""
+    echo "==> Running tests..."
+    if [ -n "${VENV}" ]; then
+        just test "${VENV}"
+    else
+        just test
+    fi
+
+    echo ""
+    echo "==> Building documentation..."
+    just docs
+
+    echo ""
+    echo "=========================================="
+    echo " ✅ Release ${VERSION} is ready"
+    echo "=========================================="
+    echo ""
+    echo "Next steps:"
+    echo "  1. git add docs/changelog.rst docs/releases.rst package.json"
+    echo "  2. git commit -m \"Release ${VERSION}\""
+    echo "  3. git tag v${VERSION}"
+    echo "  4. git push && git push --tags"
+    echo ""

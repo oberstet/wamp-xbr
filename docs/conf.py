@@ -13,6 +13,9 @@ from pygments_lexer_solidity import SolidityLexer
 # This is a fork with Sphinx 8+ compatibility fixes
 sys.path.insert(0, os.path.abspath("_vendor/sphinxcontrib-soliditydomain"))
 
+# Add .cicd/scripts to path for shared Sphinx extensions
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.cicd', 'scripts')))
+
 # -- Project information -----------------------------------------------------
 project = "xbr"
 author = "The WAMP/Autobahn/Crossbar.io OSS Project"
@@ -54,6 +57,9 @@ extensions = [
 
     # API documentation
     "autoapi.extension",
+
+    # Shared WAMP ecosystem extensions (from .cicd submodule)
+    "sphinx_auto_section_anchors",   # Stable slug-based HTML anchors
 ]
 
 # Source file suffixes (both RST and MyST Markdown)

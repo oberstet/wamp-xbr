@@ -1,37 +1,147 @@
 Release Notes
 =============
 
-This page lists all releases of **wamp-xbr**.
+This page provides links to release artifacts for each version of wamp-xbr.
 
-Current Release
----------------
+For detailed changelog entries, see :doc:`changelog`.
 
-The current stable release is available on
-`PyPI <https://pypi.org/project/xbr/>`_.
+21.2.1
+------
+
+* `GitHub Release <https://github.com/wamp-proto/wamp-xbr/releases/tag/v21.2.1>`__
+* `PyPI Package <https://pypi.org/project/xbr/21.2.1/>`__
+
+21.1.1
+------
+
+* `GitHub Release <https://github.com/wamp-proto/wamp-xbr/releases/tag/v21.1.1>`__
+* `PyPI Package <https://pypi.org/project/xbr/21.1.1/>`__
+
+20.5.1
+------
+
+* `GitHub Release <https://github.com/wamp-proto/wamp-xbr/releases/tag/v20.5.1>`__
+* `PyPI Package <https://pypi.org/project/xbr/20.5.1/>`__
+
+20.4.2
+------
+
+* `GitHub Release <https://github.com/wamp-proto/wamp-xbr/releases/tag/v20.4.2>`__
+* `PyPI Package <https://pypi.org/project/xbr/20.4.2/>`__
+
+20.4.1
+------
+
+* `GitHub Release <https://github.com/wamp-proto/wamp-xbr/releases/tag/v20.4.1>`__
+* `PyPI Package <https://pypi.org/project/xbr/20.4.1/>`__
+
+20.3.1
+------
+
+* `GitHub Release <https://github.com/wamp-proto/wamp-xbr/releases/tag/v20.3.1>`__
+* `PyPI Package <https://pypi.org/project/xbr/20.3.1/>`__
+
+20.2.2
+------
+
+* `GitHub Release <https://github.com/wamp-proto/wamp-xbr/releases/tag/v20.2.2>`__
+* `PyPI Package <https://pypi.org/project/xbr/20.2.2/>`__
+
+20.2.1
+------
+
+* `GitHub Release <https://github.com/wamp-proto/wamp-xbr/releases/tag/v20.2.1>`__
+* `PyPI Package <https://pypi.org/project/xbr/20.2.1/>`__
+
+--------------
+
+.. _release-workflow:
+
+Release Workflow (for Maintainers)
+----------------------------------
+
+This section documents the release process for maintainers.
+
+Prerequisites
+^^^^^^^^^^^^^
+
+Before releasing, ensure you have:
+
+* Push access to the repository
+* PyPI credentials configured (or trusted publishing via GitHub Actions)
+* ``just`` and ``uv`` installed
+
+Step 1: Draft the Release
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Generate changelog and release note templates:
 
 .. code-block:: bash
 
-    pip install xbr
+   # Generate changelog entry from git history (for catching up)
+   just prepare-changelog <version>
 
-Release History
----------------
+   # Generate release draft with templates for both files
+   just draft-release <version>
 
-For a complete list of releases, see:
+This will:
 
-* `PyPI Release History <https://pypi.org/project/xbr/#history>`_
-* `GitHub Releases <https://github.com/wamp-proto/wamp-xbr/releases>`_
+* Add a changelog entry template to ``docs/changelog.rst``
+* Add a release entry template to ``docs/releases.rst``
+* Update the version in ``package.json``
 
-Release Notes
--------------
+Step 2: Edit Changelog
+^^^^^^^^^^^^^^^^^^^^^^
 
-Detailed release notes and changes for each version are documented
-in the :doc:`changelog`.
+Edit ``docs/changelog.rst`` and fill in the changelog details:
 
-Version Policy
---------------
+* **New**: New features and capabilities
+* **Fix**: Bug fixes
+* **Other**: Breaking changes, deprecations, other notes
 
-wamp-xbr follows `Semantic Versioning <https://semver.org/>`_:
+Step 3: Validate the Release
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* **Major** versions for incompatible API changes
-* **Minor** versions for backwards-compatible functionality
-* **Patch** versions for backwards-compatible bug fixes
+Ensure everything is in place:
+
+.. code-block:: bash
+
+   just prepare-release <version>
+
+This validates:
+
+* Changelog entry exists for this version
+* Release entry exists for this version
+* Version in ``package.json`` matches
+* All tests pass
+* Documentation builds successfully
+
+Step 4: Commit and Tag
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   git add docs/changelog.rst docs/releases.rst package.json
+   git commit -m "Release <version>"
+   git tag v<version>
+   git push && git push --tags
+
+Step 5: Automated Release
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+After pushing the tag:
+
+1. GitHub Actions builds and tests the release
+2. Wheels and source distributions are uploaded to GitHub Releases
+3. PyPI publishing is triggered via trusted publishing (OIDC)
+4. Read the Docs builds documentation for the tagged version
+
+Manual PyPI Upload (if needed)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If automated publishing fails:
+
+.. code-block:: bash
+
+   just download-github-release v<version>
+   just publish-pypi "" v<version>
