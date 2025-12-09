@@ -1,16 +1,11 @@
-# The XBR Protocol
+# wamp-xbr
 
-[![Build Status](https://github.com/crossbario/xbr-protocol/workflows/main/badge.svg)](https://github.com/crossbario/xbr-protocol/actions?query=workflow%3Amain)
-[![Deploy Status](https://github.com/crossbario/xbr-protocol/workflows/deploy/badge.svg)](https://github.com/crossbario/xbr-protocol/actions?query=workflow%3Adeploy)
-[![Coverage](https://img.shields.io/codecov/c/github/crossbario/xbr-protocol/master.svg)](https://codecov.io/github/crossbario/xbr-protocol)
-[![Docs (on
-CDN)](https://img.shields.io/badge/Docs-CDN-yellow.svg?style=flat)](https://xbr.network/docs/protocol/index.html)
-[![Docs (on
-S3)](https://img.shields.io/badge/Docs-S3-yellow.svg?style=flat)](https://s3.eu-central-1.amazonaws.com/xbr.foundation/docs/protocol/index.html)
-[![ABIs (on
-CDN)](https://img.shields.io/badge/ABIs-CDN-blue.svg?style=flat)](https://xbr.network/lib/abi/xbr-protocol-latest.zip)
-[![ABIs (on
-S3)](https://img.shields.io/badge/ABIs-S3-blue.svg?style=flat)](https://s3.eu-central-1.amazonaws.com/xbr.foundation/lib/abi/xbr-protocol-latest.zip)
+[![PyPI](https://img.shields.io/pypi/v/xbr.svg)](https://pypi.python.org/pypi/xbr)
+[![Python](https://img.shields.io/pypi/pyversions/xbr.svg)](https://pypi.python.org/pypi/xbr)
+[![CI](https://github.com/wamp-proto/wamp-xbr/workflows/main/badge.svg)](https://github.com/wamp-proto/wamp-xbr/actions?query=workflow%3Amain)
+[![Docs](https://readthedocs.org/projects/wamp-xbr/badge/?version=latest)](https://wamp-xbr.readthedocs.io/en/latest/)
+[![License](https://img.shields.io/pypi/l/xbr.svg)](https://github.com/wamp-proto/wamp-xbr/blob/master/LICENSE)
+[![Downloads](https://img.shields.io/pypi/dm/xbr.svg)](https://pypi.python.org/pypi/xbr)
 
 ------------------------------------------------------------------------
 
