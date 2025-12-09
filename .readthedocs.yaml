@@ -11,9 +11,11 @@ build:
   # Install system packages for spell checking
   apt_packages:
     - libenchant-2-2
-  # Required for sphinxcontrib-soliditydomain submodule
+  # Required for sphinxcontrib-soliditydomain and .cicd submodules
   submodules:
     include: all
+    recursive: true
+    depth: 1
 
 sphinx:
   configuration: docs/conf.py
