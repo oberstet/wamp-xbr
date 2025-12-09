@@ -173,6 +173,10 @@ ogp_site_url = "https://xbr.network/docs/"
 # -- Solidity Lexer ----------------------------------------------------------
 lexers["solidity"] = SolidityLexer()
 
+# -- Auto Section Anchors Configuration --------------------------------------
+# Force overwrite of auto-generated ids (id1, id2, etc.) with slug-based anchors
+auto_section_anchor_force = True
+
 # -- Miscellaneous -----------------------------------------------------------
 todo_include_todos = True
 add_module_names = False
