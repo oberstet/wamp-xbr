@@ -11,11 +11,15 @@ build:
   # Install system packages for spell checking
   apt_packages:
     - libenchant-2-2
-  # Required for sphinxcontrib-soliditydomain and .cicd submodules
-  submodules:
-    include: all
-    recursive: true
-    depth: 1
+# Include .ai submodule for AI/audit related docs to be included in built docs (via symlinks)
+# Include .cicd submodule for shared Sphinx extensions (sphinx_auto_section_anchors)
+# Include deps/sphinxcontrib-soliditydomain for Solidity documentation
+submodules:
+  include:
+    - .ai
+    - .cicd
+    - deps/sphinxcontrib-soliditydomain
+  recursive: false
 
 sphinx:
   configuration: docs/conf.py
