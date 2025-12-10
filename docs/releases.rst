@@ -5,6 +5,13 @@ This page provides links to release artifacts for each version of wamp-xbr.
 
 For detailed changelog entries, see :doc:`changelog`.
 
+25.12.1
+-------
+
+* `GitHub Release <https://github.com/wamp-proto/wamp-xbr/releases/tag/v25.12.1>`__
+* `PyPI Package <https://pypi.org/project/xbr/25.12.1/>`__
+* `Documentation <https://xbr.readthedocs.io/en/v25.12.1/>`__
+
 21.2.1
 ------
 

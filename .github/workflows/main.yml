@@ -7,9 +7,16 @@ on:
   push:
     branches:
       - master
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   identifiers:
@@ -127,6 +134,63 @@ jobs:
         run: |
           just create cpy311
           just install-dev cpy311
+          just install-docs cpy311
 
       - name: Build documentation
         run: just docs cpy311
+
+  # Build distribution packages (sdist + wheel)
+  # Artifacts are uploaded with checksums for chain-of-custody verification
+  build:
+    name: Build Distribution
+    needs: [identifiers, check, test]
+    runs-on: ubuntu-24.04
+
+    env:
+      BASE_REPO: ${{ needs.identifiers.outputs.base_repo }}
+      BASE_BRANCH: ${{ needs.identifiers.outputs.base_branch }}
+      PR_NUMBER: ${{ needs.identifiers.outputs.pr_number }}
+      PR_REPO: ${{ needs.identifiers.outputs.pr_repo }}
+      PR_BRANCH: ${{ needs.identifiers.outputs.pr_branch }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python 3.11
+        run: uv python install 3.11
+
+      - name: Install just
+        uses: extractions/setup-just@v3
+
+      - name: Setup Node.js for Solidity compilation
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create venv and install build tools
+        run: |
+          just create cpy311
+          just install-build-tools cpy311
+
+      - name: Build distribution packages
+        run: just dist cpy311
+
+      - name: Verify packages
+        run: just verify-wheels cpy311
+
+      - name: List built packages
+        run: |
+          echo "Built packages:"
+          ls -lh dist/
+
+      - name: Upload distribution artifacts (verified)
+        uses: wamp-proto/wamp-cicd/actions/upload-artifact-verified@main
+        with:
+          name: dist-packages
+          path: dist/
+          retention-days: 14
