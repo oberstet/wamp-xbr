@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "xbr"
 version = "25.12.1"
 description = "XBR smart contracts and ABIs"
-readme = "README.rst"
+readme = "README.md"
 license = "MIT"
 authors = [
     {name = "typedef int GmbH", email = "autobahnws@googlegroups.com"}
