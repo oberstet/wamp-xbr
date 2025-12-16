@@ -1,205 +1,190 @@
-# -*- coding: utf-8 -*-
-#
-# Configuration file for the Sphinx documentation builder.
-#
-# This file does only contain a selection of the most common options. For a
-# full list see the documentation:
-# http://www.sphinx-doc.org/en/master/config
-
+# docs/conf.py
+# wamp-xbr documentation configuration - modernized for 2025
 import os
 import json
-import time
+import sys
+from datetime import datetime
 
 from sphinx.highlighting import lexers
 from pygments_lexer_solidity import SolidityLexer
 
-try:
-    import sphinx_rtd_theme
-except ImportError:
-    sphinx_rtd_theme = None
-
-try:
-    from sphinxcontrib import spelling
-except ImportError:
-    spelling = None
-
-# Check if we are building on readthedocs
-RTD_BUILD = os.environ.get('READTHEDOCS', None) == 'True'
-
 # -- Path setup --------------------------------------------------------------
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-import sys
-
 # Add sphinxcontrib-soliditydomain from git submodule
 # This is a fork with Sphinx 8+ compatibility fixes
-sys.path.insert(0, os.path.abspath('_vendor/sphinxcontrib-soliditydomain'))
+sys.path.insert(0, os.path.abspath("_vendor/sphinxcontrib-soliditydomain"))
 
+# Add .cicd/scripts to path for shared Sphinx extensions
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.cicd', 'scripts')))
 
 # -- Project information -----------------------------------------------------
+project = "xbr"
+author = "The WAMP/Autobahn/Crossbar.io OSS Project"
+copyright = f"2017-{datetime.now():%Y}, typedef int GmbH (Germany)"
+language = "en"
 
-project = 'The XBR Protocol'
-author = 'The XBR Project'
-
-this_year = '{0}'.format(time.strftime('%Y'))
-if this_year != '2018':
-    copyright = '2018-{0}, typedef int GmbH'.format(this_year)
-else:
-    copyright = '2018, typedef int GmbH'
-
-# The short X.Y version
-with open('../package.json') as f:
+# Get version from package.json
+with open("../package.json") as f:
     pkg = json.loads(f.read())
-    version = pkg.get('version', '?.?.?')
+    version = pkg.get("version", "?.?.?")
 
-# The full version, including alpha/beta/rc tags
 release = version
 
-
 # -- General configuration ---------------------------------------------------
-
-# If your documentation needs a minimal Sphinx version, state it here.
-#
-# needs_sphinx = '1.0'
-
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.intersphinx',
+    # MyST Markdown support
+    "myst_parser",
 
-    # Usage: .. thumbnail:: picture.png
-    'sphinxcontrib.images',
+    # Core Sphinx extensions
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.autosectionlabel",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.ifconfig",
+    "sphinx.ext.doctest",
 
-    # https://solidity-domain-for-sphinx.readthedocs.io/en/latest/index.html
-    # https://github.com/cag/sphinxcontrib-soliditydomain/
+    # Modern UX extensions
+    "sphinx_design",
+    "sphinx_copybutton",
+    "sphinxext.opengraph",
+    "sphinxcontrib.images",
+    "sphinxcontrib.spelling",
+
+    # Solidity smart contract documentation
     # Loaded from git submodule at docs/_vendor/sphinxcontrib-soliditydomain
-    'sphinxcontrib.soliditydomain',
+    "sphinxcontrib.soliditydomain",
+
+    # API documentation
+    "autoapi.extension",
+
+    # Shared WAMP ecosystem extensions (from .cicd submodule)
+    "sphinx_auto_section_anchors",   # Stable slug-based HTML anchors
 ]
 
-# https://pythonhosted.org/sphinxcontrib-images/#how-to-configure
-images_config = {
-    'override_image_directive': False
+# Source file suffixes (both RST and MyST Markdown)
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".md": "markdown",
 }
 
-# extensions not available on RTD
-if spelling is not None:
-    extensions.append('sphinxcontrib.spelling')
-    spelling_lang = 'en_US'
-    spelling_show_suggestions = False
-    spelling_word_list_filename = 'spelling_wordlist.txt'
+# The master toctree document
+master_doc = "index"
 
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+# Exclude patterns
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "_work", "_vendor"]
 
-# The suffix(es) of source filenames.
-# You can specify multiple suffix as a list of string:
-#
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+# -- MyST Configuration ------------------------------------------------------
+myst_enable_extensions = [
+    "colon_fence",
+    "deflist",
+    "tasklist",
+    "attrs_block",
+    "attrs_inline",
+    "smartquotes",
+    "linkify",
+]
+myst_heading_anchors = 3
 
-# The master toctree document.
-master_doc = 'index'
+# -- AutoAPI Configuration ---------------------------------------------------
+autoapi_type = "python"
+autoapi_dirs = ["../src/xbr"]
+autoapi_add_toctree_entry = True
+autoapi_keep_files = False              # Cleaner RTD builds
+autoapi_generate_api_docs = True
+autoapi_options = [
+    "members",
+    "undoc-members",
+    "private-members",
+    "special-members",
+    "show-inheritance",
+    "show-module-summary",
+    "imported-members",
+]
+autoapi_ignore = [
+    "*/_version.py",
+    "*/test_*.py",
+    "*/*_test.py",
+    "*/conftest.py",
+]
+autoapi_python_use_implicit_namespaces = True
+autoapi_member_order = "alphabetical"   # Predictable ordering
 
-# The language for content autogenerated by Sphinx. Refer to documentation
-# for a list of supported languages.
-#
-# This is also used if you do content translation via gettext catalogs.
-# Usually you set "language" from the command line for these cases.
-language = 'en'
-
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '_work', '_vendor']
-
-
-# -- Options for HTML output -------------------------------------------------
-
-# the following trickery is to make it build both locally and on RTD
-#
-# see: https://blog.deimos.fr/2014/10/02/sphinxdoc-and-readthedocs-theme-tricks-2/
-#
-if RTD_BUILD:
-    html_context = {
-        'css_files': [
-            'https://media.readthedocs.org/css/sphinx_rtd_theme.css',
-            'https://media.readthedocs.org/css/readthedocs-doc-embed.css',
-            '_static/custom.css'
-        ]
-    }
-else:
-    if sphinx_rtd_theme:
-        html_theme = 'sphinx_rtd_theme'
-        # Note: html_theme_path no longer needed with modern sphinx-rtd-theme
-
-        # add custom CSS on top of Sphinx RTD standard CSS
-        def setup(app):
-            app.add_css_file('css/custom.css')
-    else:
-        html_theme = 'default'
-
-html_logo = '_static/img/xbr.svg'
-full_logo = True
-
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-html_theme_options = {
-    'collapse_navigation': False,
-    # https://stackoverflow.com/questions/27669376/show-entire-toctree-in-read-the-docs-sidebar
-    'navigation_depth': 3,
-}
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
-
-html_favicon = '_static/img/favicon.ico'
-
-# Custom sidebar templates, must be a dictionary that maps document names
-# to template names.
-#
-# The default sidebars (for documents that don't match any pattern) are
-# defined by theme itself.  Builtin themes are using these templates by
-# default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
-# 'searchbox.html']``.
-#
-# html_sidebars = {}
-
-# The name of the Pygments (syntax highlighting) style to use.
-
-lexers['solidity'] = SolidityLexer()
-
-#pygments_style = 'sphinx'
-#pygments_style = 'monokai'
-#pygments_style = 'native'
-#pygments_style = 'pastie'
-#pygments_style = 'friendly'
-pygments_style = 'sphinx'
-
-# -- Extension configuration -------------------------------------------------
-
-# http://sphinx-doc.org/ext/intersphinx.html
+# -- Intersphinx Configuration -----------------------------------------------
 intersphinx_mapping = {
-   'python': ('https://docs.python.org/3', None),
+    "python": ("https://docs.python.org/3", None),
+    "twisted": ("https://docs.twisted.org/en/stable/", None),
+    "txaio": ("https://txaio.readthedocs.io/en/latest/", None),
+    "autobahn": ("https://autobahn.readthedocs.io/en/latest/", None),
+}
+intersphinx_cache_limit = 5
+
+# -- HTML Output (Furo Theme) ------------------------------------------------
+html_theme = "furo"
+html_title = f"{project} {release}"
+
+# Furo theme options with Noto fonts and WAMP subarea colors
+html_theme_options = {
+    # Source repository links
+    "source_repository": "https://github.com/wamp-proto/wamp-xbr/",
+    "source_branch": "master",
+    "source_directory": "docs/",
+
+    # Noto fonts and WAMP Dark Anthracite (#1a1a1a) accent color
+    "light_css_variables": {
+        "font-stack": "'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        "font-stack--monospace": "'Noto Sans Mono', SFMono-Regular, Menlo, Consolas, monospace",
+        "color-brand-primary": "#1a1a1a",
+        "color-brand-content": "#1a1a1a",
+    },
+    "dark_css_variables": {
+        "font-stack": "'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        "font-stack--monospace": "'Noto Sans Mono', SFMono-Regular, Menlo, Consolas, monospace",
+        "color-brand-primary": "#e0e0e0",
+        "color-brand-content": "#e0e0e0",
+    },
 }
 
-rst_epilog = """
-"""
+# Logo and favicon (synced from wamp-proto by `just sync-images`)
+# Uses the WAMP logo for WAMP ecosystem projects
+html_logo = "_static/img/wamp_logo.svg"
+html_favicon = "_static/favicon.ico"
 
-rst_prolog = """
-"""
+# Static files
+html_static_path = ["_static"]
+html_css_files = [
+    # Load Noto fonts from Google Fonts
+    "https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Mono:wght@400;500&display=swap",
+]
 
-# http://stackoverflow.com/questions/5599254/how-to-use-sphinxs-autodoc-to-document-a-classs-init-self-method
-autoclass_content = 'both'
+# -- sphinxcontrib-images Configuration --------------------------------------
+# NOTE: override_image_directive must be False to preserve standard RST image
+# directive :target: option support, which is required for clickable badge
+# substitutions in docs/index.rst (e.g., |PyPI| |Python| |CI| etc.)
+images_config = {
+    "override_image_directive": False,
+}
 
-# http://www.sphinx-doc.org/en/stable/ext/autodoc.html#confval-autodoc_member_order
-autodoc_member_order = 'bysource'
-# autodoc_member_order = 'alphabetical'
-# autodoc_member_order = 'groupwise'
+# -- Spelling Configuration --------------------------------------------------
+spelling_lang = "en_US"
+spelling_word_list_filename = "spelling_wordlist.txt"
+spelling_show_suggestions = True
+
+# -- OpenGraph (Social Media Meta Tags) -------------------------------------
+ogp_site_url = "https://xbr.network/docs/"
+
+# -- Solidity Lexer ----------------------------------------------------------
+lexers["solidity"] = SolidityLexer()
+
+# -- Auto Section Anchors Configuration --------------------------------------
+# Force overwrite of auto-generated ids (id1, id2, etc.) with slug-based anchors
+auto_section_anchor_force = True
+
+# -- Miscellaneous -----------------------------------------------------------
+todo_include_todos = True
+add_module_names = False
+autosectionlabel_prefix_document = True
+pygments_style = "sphinx"
+pygments_dark_style = "monokai"
+autoclass_content = "both"
+autodoc_member_order = "bysource"

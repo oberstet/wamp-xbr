@@ -1,10 +1,10 @@
 # GitHub Actions workflow for building and publishing xbr releases.
-# This follows the autobahn-python/zlmdb/crossbar model using workflow_run triggers.
+# This follows the autobahn-python/zlmdb/cfxdb model using workflow_run triggers.
 
 name: release
 
 on:
-  # Auto-trigger after main workflow completes (NOT direct push/pr triggers)
+  # Auto-trigger after main workflow completes
   workflow_run:
     workflows: ["main"]
     types: [completed]
@@ -15,18 +15,21 @@ on:
 permissions:
   id-token: write      # Required for PyPI trusted publishing (OIDC)
   contents: write      # Required for creating GitHub releases
+  discussions: write   # Required for posting to discussions
   pull-requests: read  # Required for identifiers workflow
-
-env:
-  UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
+  actions: read        # Required for downloading artifacts
 
 jobs:
+  # ============================================================================
+  # Check if main workflow completed successfully
+  # ============================================================================
   check-main-workflow:
-    name: Check if main workflow completed successfully
+    name: Check if main workflow completed
     runs-on: ubuntu-latest
     outputs:
       main_run_id: ${{ steps.check.outputs.main_run_id }}
       should_proceed: ${{ steps.check.outputs.should_proceed }}
+      artifact_dist: ${{ steps.check.outputs.artifact_dist }}
 
     steps:
       - name: Check main workflow completion
@@ -64,6 +67,24 @@ jobs:
             console.log(`Main workflow: ${status}`);
             console.log('');
 
+            // Find artifact name with checksum suffix
+            let artifactDist = '';
+            if (mainComplete && mainRun) {
+              const { data: artifacts } = await github.rest.actions.listWorkflowRunArtifacts({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: mainRun.id
+              });
+
+              const distArtifact = artifacts.artifacts.find(a => a.name.startsWith('dist-packages-'));
+              if (distArtifact) {
+                artifactDist = distArtifact.name;
+                console.log(`Found artifact: ${artifactDist}`);
+              } else {
+                console.log('⚠️  No dist-packages artifact found');
+              }
+            }
+
             if (!mainComplete) {
               console.log('⏳ Main workflow not complete yet - exiting early');
               console.log('   This is normal! Release will proceed once main workflow finishes.');
@@ -74,22 +95,22 @@ jobs:
 
             core.setOutput('should_proceed', mainComplete ? 'true' : 'false');
             core.setOutput('main_run_id', mainRun?.id || '');
+            core.setOutput('artifact_dist', artifactDist);
 
+  # ============================================================================
+  # Identifiers (extract release info)
+  # ============================================================================
   identifiers:
     name: Identifiers
     needs: check-main-workflow
     if: needs.check-main-workflow.outputs.should_proceed == 'true'
-    # GitHub needs to know where .cicd/workflows/identifiers.yml lives at parse time,
-    # and submodules aren't included in that context! thus the following does NOT work:
-    # uses: ./.cicd/workflows/identifiers.yml
-    # we MUST reference the remote repo directly:
     uses: wamp-proto/wamp-cicd/.github/workflows/identifiers.yml@main
-    # IMPORTANT: we still need .cicd as a Git submodule in the using repo though!
-    # because e.g. identifiers.yml wants to access scripts/sanitize.sh !
 
+  # ============================================================================
   # Development/Nightly GitHub releases (for untagged master builds)
+  # ============================================================================
   release-development:
-    name: Development/Nightly GitHub Release
+    name: Development GitHub Release
     needs: [check-main-workflow, identifiers]
     runs-on: ubuntu-24.04
 
@@ -104,48 +125,35 @@ jobs:
       RELEASE_TYPE: ${{ needs.identifiers.outputs.release_type }}
       RELEASE_NAME: ${{ needs.identifiers.outputs.release_name }}
 
-    permissions:
-      contents: write  # Required for creating releases
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-
-      - name: Set up Python 3.11
-        run: uv python install 3.11
-
-      - name: Install just
-        uses: extractions/setup-just@v3
-
-      - name: Setup Node.js for Solidity compilation
-        uses: actions/setup-node@v4
+      - name: Download distribution artifacts (verified)
+        uses: wamp-proto/wamp-cicd/actions/download-artifact-verified@main
         with:
-          node-version: '20'
+          name: ${{ needs.check-main-workflow.outputs.artifact_dist }}
+          path: ${{ github.workspace }}/dist
+          run-id: ${{ needs.check-main-workflow.outputs.main_run_id }}
 
-      - name: Create venv and install build tools
+      - name: List downloaded packages
         run: |
-          just create cpy311
-          just install-build-tools cpy311
+          echo "Downloaded packages:"
+          ls -lh ${{ github.workspace }}/dist/
 
-      - name: Build distribution packages
-        run: just dist cpy311
-
-      - name: Verify packages
-        run: just verify-wheels cpy311
-
-      - name: List built packages
-        run: |
-          echo "Built packages:"
-          ls -lh dist/
+      - name: Validate release fileset
+        uses: wamp-proto/wamp-cicd/actions/check-release-fileset@main
+        with:
+          dist-path: ${{ github.workspace }}/dist
+          expected-wheels: 1
+          expected-sdists: 1
+          wheel-pattern: "py3-none-any"
 
       - name: Generate checksums
         run: |
-          cd dist
+          cd ${{ github.workspace }}/dist
           sha256sum * > CHECKSUMS-ALL.sha256
           cat CHECKSUMS-ALL.sha256
 
@@ -175,13 +183,16 @@ jobs:
             - SHA256 checksums (CHECKSUMS-ALL.sha256)
 
             ⚠️  This is a development build - for production use, install from PyPI.
-          files: dist/*
+          files: ${{ github.workspace }}/dist/*
           draft: false
           prerelease: true
+          discussion_category_name: ci-cd
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # ============================================================================
   # Production releases (for tagged stable builds) - GitHub + PyPI
+  # ============================================================================
   release-production:
     name: Production Release (GitHub + PyPI)
     needs: [check-main-workflow, identifiers]
@@ -202,49 +213,40 @@ jobs:
       name: pypi
       url: https://pypi.org/p/xbr
 
-    permissions:
-      id-token: write  # For trusted publishing
-      contents: write  # For GitHub releases
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-
-      - name: Set up Python 3.11
-        run: uv python install 3.11
-
-      - name: Install just
-        uses: extractions/setup-just@v3
-
-      - name: Setup Node.js for Solidity compilation
-        uses: actions/setup-node@v4
+      - name: Validate audit file
+        uses: wamp-proto/wamp-cicd/actions/validate-audit-file@main
         with:
-          node-version: '20'
+          audit-dir: .audit
 
-      - name: Create venv and install build tools
+      - name: Download distribution artifacts (verified)
+        uses: wamp-proto/wamp-cicd/actions/download-artifact-verified@main
+        with:
+          name: ${{ needs.check-main-workflow.outputs.artifact_dist }}
+          path: ${{ github.workspace }}/dist
+          run-id: ${{ needs.check-main-workflow.outputs.main_run_id }}
+
+      - name: List downloaded packages
         run: |
-          just create cpy311
-          just install-build-tools cpy311
+          echo "Downloaded packages:"
+          ls -lh ${{ github.workspace }}/dist/
 
-      - name: Build distribution packages
-        run: just dist cpy311
-
-      - name: Verify packages
-        run: just verify-wheels cpy311
-
-      - name: List built packages
-        run: |
-          echo "Built packages:"
-          ls -lh dist/
+      - name: Validate release fileset
+        uses: wamp-proto/wamp-cicd/actions/check-release-fileset@main
+        with:
+          dist-path: ${{ github.workspace }}/dist
+          expected-wheels: 1
+          expected-sdists: 1
+          wheel-pattern: "py3-none-any"
 
       - name: Generate checksums (for GitHub release)
         run: |
-          cd dist
+          cd ${{ github.workspace }}/dist
           sha256sum * > CHECKSUMS-ALL.sha256
           cat CHECKSUMS-ALL.sha256
 
@@ -255,9 +257,25 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
 
+      # IMPORTANT: tag_name MUST be explicitly specified here!
+      #
+      # When this workflow runs via workflow_run trigger (after the main workflow
+      # completes), github.ref is "refs/heads/master" (a branch), NOT the tag.
+      # This is because workflow_run context inherits from the triggering workflow's
+      # context, and even though the main workflow was triggered by a tag push,
+      # the github.ref in the workflow_run context points to the default branch.
+      #
+      # The softprops/action-gh-release action defaults to using github.ref for
+      # the tag name when tag_name is not specified. Since github.ref is a branch
+      # (not a tag), the action fails with: "GitHub Releases requires a tag"
+      #
+      # Solution: Explicitly pass tag_name using the version extracted from
+      # the identifiers workflow, which correctly detected the tag via
+      # `git describe --tags --exact-match` on the head_sha.
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ steps.get_version.outputs.version }}
           name: v${{ steps.get_version.outputs.version }}
           body: |
             ## xbr v${{ steps.get_version.outputs.version }}
@@ -271,13 +289,16 @@ jobs:
 
             **Links:**
             - 📦 PyPI: https://pypi.org/project/xbr/${{ steps.get_version.outputs.version }}/
-            - 📖 Docs: https://xbr.network/docs
+            - 📖 Docs: https://xbr.readthedocs.io/
             - 💻 Source: https://github.com/wamp-proto/wamp-xbr/tree/v${{ steps.get_version.outputs.version }}
 
-            See [CHANGELOG](https://github.com/wamp-proto/wamp-xbr/blob/master/CHANGELOG.md) for details.
-          files: dist/*
+            See [CHANGELOG](https://github.com/wamp-proto/wamp-xbr/blob/master/docs/changelog.rst) for details.
+
+            Also published to PyPI: https://pypi.org/project/xbr/
+          files: ${{ github.workspace }}/dist/*
           draft: false
           prerelease: false
+          discussion_category_name: ci-cd
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -286,30 +307,19 @@ jobs:
           echo "======================================================================"
           echo "Removing files that PyPI doesn't accept"
           echo "======================================================================"
-          rm -f dist/CHECKSUMS*.sha256 dist/*-docs.tar.gz dist/build-info.txt
+          rm -f ${{ github.workspace }}/dist/CHECKSUMS*.sha256
           echo ""
           echo "Files to upload to PyPI:"
-          ls -lh dist/
+          ls -lh ${{ github.workspace }}/dist/
           echo "======================================================================"
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: dist/
+          # Use OIDC trusted publishing (no password needed)
+          # Automatically generates and uploads attestations
+          packages-dir: ${{ github.workspace }}/dist/
           verify-metadata: true
           skip-existing: false
           print-hash: true
           attestations: true
-
-      - name: Trigger RTD build
-        env:
-          RTD_TOKEN: ${{ secrets.RTD_TOKEN }}
-        run: |
-          if [ -n "$RTD_TOKEN" ]; then
-            echo "Triggering Read the Docs build for xbr..."
-            curl -X POST \
-              -H "Authorization: Token $RTD_TOKEN" \
-              "https://readthedocs.org/api/v3/projects/xbr/versions/latest/builds/"
-          else
-            echo "RTD_TOKEN not configured, skipping RTD build trigger"
-          fi

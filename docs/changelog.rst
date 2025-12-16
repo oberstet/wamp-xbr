@@ -1,0 +1,57 @@
+Changelog
+=========
+
+This document contains a reverse-chronological list of changes to wamp-xbr.
+
+.. note::
+
+    For detailed release information including artifacts,
+    see :doc:`releases`.
+
+Unreleased
+----------
+
+*No unreleased changes yet.*
+
+25.12.1 (2025-12-10)
+--------------------
+
+**New**
+
+* Modernized build system: migrated from setup.py to pyproject.toml with hatch backend
+* Added comprehensive just recipes for development workflow (create, install-dev, check, test, docs, dist)
+* Added uv for fast Python environment management
+* Added ruff for code formatting and linting (replaces flake8/black)
+* Added ty (Astral) for type checking
+* Added Sphinx documentation with MyST Markdown support and furo theme
+* Added sphinx-autoapi for automatic API documentation generation
+* Modernized CI/CD workflows with chain-of-custody verification using wamp-cicd reusable actions
+
+**Fix**
+
+* Fixed import sorting (I001) errors across source files
+* Fixed documentation build configuration for Read the Docs
+
+**Other**
+
+* Updated dependencies: autobahn>=25.12.1, txaio>=25.12.2, zlmdb>=25.12.1
+* Added Python 3.11, 3.12, 3.13 support in CI
+* Dropped Python 3.9, 3.10 support (minimum is now Python 3.11)
+
+..
+    Format for entries:
+
+    vX.Y.Z (YYYY-MM-DD)
+    -------------------
+
+    **New**
+
+    * Description of new feature (#issue)
+
+    **Fix**
+
+    * Description of bug fix (#issue)
+
+    **Other**
+
+    * Description of other changes (#issue)

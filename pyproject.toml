@@ -1,13 +1,13 @@
 [build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "xbr"
-dynamic = ["version"]
+version = "25.12.1"
 description = "XBR smart contracts and ABIs"
-readme = "README.rst"
-license = "Apache-2.0"
+readme = "README.md"
+license = "MIT"
 authors = [
     {name = "typedef int GmbH", email = "autobahnws@googlegroups.com"}
 ]
@@ -30,11 +30,11 @@ classifiers = [
 requires-python = ">=3.11"
 dependencies = [
     # WAMP client library - core dependency for XBR protocol
-    "autobahn>=23.1.1",
+    "autobahn>=25.12.1",
     # Async compatibility layer (Twisted/asyncio)
-    "txaio>=23.1.1",
+    "txaio>=25.12.2",
     # Object-relational database layer (flatbuffers reflection for schema handling)
-    "zlmdb>=23.1.1",
+    "zlmdb>=25.12.1",
     # bitarray is required by eth-account, but on pypy
     # see discussion/links on https://github.com/crossbario/autobahn-python/pull/1617
     "bitarray>=2.7.5",
@@ -112,6 +112,7 @@ dev = [
     # Note: ty (type checker) installed via 'uv tool install ty'
 
     # Documentation
+    "scour>=0.38",  # SVG optimizer for documentation logos
     "sphinx>=8.0.0",
     "sphinx-rtd-theme>=3.0.0",
     "pygments-lexer-solidity>=0.7.0",
@@ -121,6 +122,46 @@ dev = [
     "peewee>=3.0.0",  # Required by sphinxcontrib-soliditydomain
 ]
 
+# For testing with unreleased WAMP packages from GitHub master branches
+# Usage: pip install -e .[dev,dev-latest]
+# This installs the latest development versions from GitHub instead of PyPI
+dev-latest = [
+    "txaio @ git+https://github.com/crossbario/txaio.git@master",
+    "autobahn @ git+https://github.com/crossbario/autobahn-python.git@master",
+    "zlmdb @ git+https://github.com/crossbario/zlmdb.git@master",
+]
+
+# Documentation tools (used by RTD via .readthedocs.yaml)
+docs = [
+    # Core Sphinx + MyST
+    "sphinx>=8.2.3",
+    "myst-parser>=2.0",
+
+    # Theme
+    "furo>=2024.7.0",
+
+    # API docs (no-import parsing)
+    "sphinx-autoapi>=2.1.0",
+
+    # UX Enhancements
+    "sphinx-copybutton>=0.5",
+    "sphinx-design>=0.5",
+    "sphinxcontrib-images>=0.9",
+
+    # Spell checking
+    "sphinxcontrib-spelling>=8.0",
+    "pyenchant>=3.2",
+
+    # Static asset optimization
+    "scour>=0.38",
+
+    # Social previews
+    "sphinxext-opengraph>=0.9",
+
+    # MyST auto-linking
+    "linkify-it-py>=2.0.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/wamp-proto/wamp-xbr"
 Repository = "https://github.com/wamp-proto/wamp-xbr"
@@ -128,17 +169,38 @@ Documentation = "https://xbr.network/docs"
 Changelog = "https://github.com/wamp-proto/wamp-xbr/blob/master/CHANGELOG.md"
 Issues = "https://github.com/wamp-proto/wamp-xbr/issues"
 
-[tool.setuptools]
-zip-safe = true
-include-package-data = true
+# Hatchling build configuration
+[tool.hatch.metadata]
+# Allow git+https:// dependencies in dev-latest for cross-repo development
+allow-direct-references = true
 
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["xbr*"]
-exclude = ["test*", "autobahn-asyncio-xbr*", "autobahn-twisted-xbr*"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/xbr"]
 
-[tool.setuptools.dynamic]
-version = {attr = "xbr._version.__version__"}
+# Note: Non-Python files (templates, abi, contract) are included automatically
+# via the src/xbr directory which contains symlinks to these resources.
+# The symlinks are:
+#   src/xbr/abi -> ../../build/contracts (compiled Solidity ABIs)
+#   src/xbr/contract -> ../../contracts (Solidity source files)
+#   src/xbr/templates -> templates directory
+#
+# For wheel builds, compile contracts first with: just compile-contracts
+# This creates build/contracts/ which the abi symlink points to.
+
+[tool.hatch.build.targets.sdist]
+# By default, hatchling includes all git-tracked files
+# Exclude build artifacts from sdist
+exclude = [
+    "/.github",
+    "/docs/_build",
+    "/.venvs",
+    "/.uv-cache",
+    "/.coverage",
+    "/.pytest_cache",
+    "/.mypy_cache",
+    "/.ruff_cache",
+    "/node_modules",
+]
 
 # Ruff configuration (replaces flake8, black, yapf)
 [tool.ruff]
