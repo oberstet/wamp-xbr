@@ -13,6 +13,20 @@ Unreleased
 
 *No unreleased changes yet.*
 
+25.12.2 (2025-12-16)
+--------------------
+
+**Fix**
+
+* Fixed release.yml workflow check-release-fileset parameters (wheel was missing from releases)
+* Aligned justfile download-github-release recipe with autobahn-python/zlmdb/cfxdb
+* Synced package.json version with pyproject.toml (was 21.4.1, now matches 25.12.x)
+
+**Other**
+
+* Updated dependencies: autobahn>=25.12.2, zlmdb>=25.12.2
+* Rewrote download-github-release recipe to use curl (no gh auth required)
+
 25.12.1 (2025-12-10)
 --------------------
 

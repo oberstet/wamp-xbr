@@ -143,19 +143,15 @@ jobs:
           echo "Downloaded packages:"
           ls -lh ${{ github.workspace }}/dist/
 
-      - name: Validate release fileset
+      - name: Validate and prepare release fileset
         uses: wamp-proto/wamp-cicd/actions/check-release-fileset@main
         with:
-          dist-path: ${{ github.workspace }}/dist
-          expected-wheels: 1
-          expected-sdists: 1
-          wheel-pattern: "py3-none-any"
-
-      - name: Generate checksums
-        run: |
-          cd ${{ github.workspace }}/dist
-          sha256sum * > CHECKSUMS-ALL.sha256
-          cat CHECKSUMS-ALL.sha256
+          distdir: ${{ github.workspace }}/dist
+          mode: strict
+          keep-metadata: true  # Keep CHECKSUMS for user verification
+          targets: |
+            py3-none-any
+            source
 
       - name: Create development GitHub release
         uses: softprops/action-gh-release@v2
@@ -236,19 +232,15 @@ jobs:
           echo "Downloaded packages:"
           ls -lh ${{ github.workspace }}/dist/
 
-      - name: Validate release fileset
+      - name: Validate and prepare release fileset for GitHub
         uses: wamp-proto/wamp-cicd/actions/check-release-fileset@main
         with:
-          dist-path: ${{ github.workspace }}/dist
-          expected-wheels: 1
-          expected-sdists: 1
-          wheel-pattern: "py3-none-any"
-
-      - name: Generate checksums (for GitHub release)
-        run: |
-          cd ${{ github.workspace }}/dist
-          sha256sum * > CHECKSUMS-ALL.sha256
-          cat CHECKSUMS-ALL.sha256
+          distdir: ${{ github.workspace }}/dist
+          mode: strict
+          keep-metadata: true  # Keep CHECKSUMS for user verification
+          targets: |
+            py3-none-any
+            source
 
       - name: Get version
         id: get_version
@@ -302,16 +294,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Remove non-PyPI files before upload
-        run: |
-          echo "======================================================================"
-          echo "Removing files that PyPI doesn't accept"
-          echo "======================================================================"
-          rm -f ${{ github.workspace }}/dist/CHECKSUMS*.sha256
-          echo ""
-          echo "Files to upload to PyPI:"
-          ls -lh ${{ github.workspace }}/dist/
-          echo "======================================================================"
+      - name: Validate and clean release fileset for PyPI
+        uses: wamp-proto/wamp-cicd/actions/check-release-fileset@main
+        with:
+          distdir: ${{ github.workspace }}/dist
+          mode: strict
+          # keep-metadata: false (default - removes CHECKSUMS, build-info.txt etc for PyPI)
+          targets: |
+            py3-none-any
+            source
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
