@@ -122,15 +122,6 @@ dev = [
     "peewee>=3.0.0",  # Required by sphinxcontrib-soliditydomain
 ]
 
-# For testing with unreleased WAMP packages from GitHub master branches
-# Usage: pip install -e .[dev,dev-latest]
-# This installs the latest development versions from GitHub instead of PyPI
-dev-latest = [
-    "txaio @ git+https://github.com/crossbario/txaio.git@master",
-    "autobahn @ git+https://github.com/crossbario/autobahn-python.git@master",
-    "zlmdb @ git+https://github.com/crossbario/zlmdb.git@master",
-]
-
 # Documentation tools (used by RTD via .readthedocs.yaml)
 docs = [
     # Core Sphinx + MyST
@@ -170,10 +161,6 @@ Changelog = "https://github.com/wamp-proto/wamp-xbr/blob/master/CHANGELOG.md"
 Issues = "https://github.com/wamp-proto/wamp-xbr/issues"
 
 # Hatchling build configuration
-[tool.hatch.metadata]
-# Allow git+https:// dependencies in dev-latest for cross-repo development
-allow-direct-references = true
-
 [tool.hatch.build.targets.wheel]
 packages = ["src/xbr"]
 
