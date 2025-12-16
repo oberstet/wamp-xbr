@@ -18,8 +18,9 @@ WAMP XBR Decentralized Messaging Extension
 
 --------------
 
-**XBR** (Cross-Bar Resource) is a protocol for secure peer-to-peer data-trading
-and service microtransactions in `Open Data Markets <https://xbr.network>`__.
+**XBR** enables secure decentralized application messaging, peer-to-peer data-trading
+and -service microtransactions in open data markets between multiple independent
+entities or operators.
 
 XBR sits on top of `WAMP <https://wamp-proto.org>`__, an open messaging middleware
 and service mesh technology, enabling secure integration, trusted sharing and

@@ -9,9 +9,7 @@
 
 ------------------------------------------------------------------------
 
-The **XBR Protocol** enables secure peer-to-peer data-trading and
--service microtransactions in [Open Data Markets](https://xbr.network)
-between multiple independent entities.
+**XBR** enables secure decentralized application messaging, peer-to-peer data-trading and -service microtransactions in open data markets between multiple independent entities or operators.
 
 XBR as a protocol sits on top of [WAMP](https://wamp-proto.org), an open
 messaging middleware and service mesh technology, and enables secure
