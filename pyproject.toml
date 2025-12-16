@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "xbr"
-version = "25.12.1"
+version = "25.12.2"
 description = "XBR smart contracts and ABIs"
 readme = "README.md"
 license = "MIT"
@@ -171,15 +171,23 @@ Issues = "https://github.com/wamp-proto/wamp-xbr/issues"
 [tool.hatch.build.targets.wheel]
 packages = ["src/xbr"]
 
-# Note: Non-Python files (templates, abi, contract) are included automatically
-# via the src/xbr directory which contains symlinks to these resources.
-# The symlinks are:
+# IMPORTANT: Hatchling does NOT follow symlinks by default for security reasons.
+# We must use force-include to explicitly copy non-Python resources into the wheel.
+#
+# The src/xbr directory contains symlinks to these resources:
 #   src/xbr/abi -> ../../build/contracts (compiled Solidity ABIs)
 #   src/xbr/contract -> ../../contracts (Solidity source files)
 #   src/xbr/templates -> templates directory
 #
 # For wheel builds, compile contracts first with: just compile-contracts
-# This creates build/contracts/ which the abi symlink points to.
+# This creates build/contracts/ which contains the ABI JSON files.
+
+[tool.hatch.build.targets.wheel.force-include]
+# Include compiled Solidity ABI files (from build/contracts/ after truffle compile)
+"build/contracts" = "xbr/abi"
+# Include Solidity source contracts (at repo root)
+"contracts" = "xbr/contract"
+# Note: templates are already in src/xbr/templates and included automatically
 
 [tool.hatch.build.targets.sdist]
 # By default, hatchling includes all git-tracked files
@@ -195,6 +203,10 @@ exclude = [
     "/.ruff_cache",
     "/node_modules",
 ]
+
+# Force include build/contracts in sdist so wheel can be built from sdist
+[tool.hatch.build.targets.sdist.force-include]
+"build/contracts" = "build/contracts"
 
 # Ruff configuration (replaces flake8, black, yapf)
 [tool.ruff]
