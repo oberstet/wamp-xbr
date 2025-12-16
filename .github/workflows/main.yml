@@ -56,7 +56,7 @@ jobs:
         uses: extractions/setup-just@v3
 
       - name: Install ty (Astral type checker)
-        run: uv tool install ty
+        run: uv tool install ty --prerelease=allow
 
       - name: Create venv and install dev dependencies
         run: |
@@ -180,8 +180,11 @@ jobs:
       - name: Build distribution packages
         run: just dist cpy311
 
-      - name: Verify packages
+      - name: Verify packages with twine
         run: just verify-wheels cpy311
+
+      - name: Verify wheel contents (ABI, contracts, templates)
+        run: just verify-wheel-contents
 
       - name: List built packages
         run: |
@@ -194,3 +197,54 @@ jobs:
           name: dist-packages
           path: dist/
           retention-days: 14
+
+  # Verify built packages can be installed and work correctly
+  verify:
+    name: Verify Distribution
+    needs: [identifiers, build]
+    runs-on: ubuntu-24.04
+
+    env:
+      BASE_REPO: ${{ needs.identifiers.outputs.base_repo }}
+      BASE_BRANCH: ${{ needs.identifiers.outputs.base_branch }}
+      PR_NUMBER: ${{ needs.identifiers.outputs.pr_number }}
+      PR_REPO: ${{ needs.identifiers.outputs.pr_repo }}
+      PR_BRANCH: ${{ needs.identifiers.outputs.pr_branch }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python 3.11
+        run: uv python install 3.11
+
+      - name: Install just
+        uses: extractions/setup-just@v3
+
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dist-packages-*
+          path: dist/
+          merge-multiple: true
+
+      - name: List downloaded packages
+        run: |
+          echo "Downloaded packages:"
+          ls -lh dist/
+
+      - name: Test wheel installation
+        run: |
+          WHEEL=$(ls -1 dist/*.whl | head -1)
+          echo "Testing wheel: ${WHEEL}"
+          just test-wheel-install "${WHEEL}"
+
+      - name: Test sdist installation
+        run: |
+          SDIST=$(ls -1 dist/*.tar.gz | head -1)
+          echo "Testing sdist: ${SDIST}"
+          just test-sdist-install "${SDIST}"
