@@ -156,7 +156,7 @@ docs = [
 [project.urls]
 Homepage = "https://github.com/wamp-proto/wamp-xbr"
 Repository = "https://github.com/wamp-proto/wamp-xbr"
-Documentation = "https://xbr.network/docs"
+Documentation = "https://xbr.readthedocs.io/"
 Changelog = "https://github.com/wamp-proto/wamp-xbr/blob/master/CHANGELOG.md"
 Issues = "https://github.com/wamp-proto/wamp-xbr/issues"
 
