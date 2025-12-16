@@ -3,8 +3,8 @@
 [![PyPI](https://img.shields.io/pypi/v/xbr.svg)](https://pypi.python.org/pypi/xbr)
 [![Python](https://img.shields.io/pypi/pyversions/xbr.svg)](https://pypi.python.org/pypi/xbr)
 [![CI](https://github.com/wamp-proto/wamp-xbr/workflows/main/badge.svg)](https://github.com/wamp-proto/wamp-xbr/actions?query=workflow%3Amain)
-[![Docs](https://readthedocs.org/projects/wamp-xbr/badge/?version=latest)](https://wamp-xbr.readthedocs.io/en/latest/)
-[![License](https://img.shields.io/pypi/l/xbr.svg)](https://github.com/wamp-proto/wamp-xbr/blob/master/LICENSE)
+[![Docs](https://readthedocs.org/projects/xbr/badge/?version=latest)](https://xbr.readthedocs.io/en/latest/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wamp-proto/wamp-xbr/blob/master/LICENSE)
 [![Downloads](https://img.shields.io/pypi/dm/xbr.svg)](https://pypi.python.org/pypi/xbr)
 
 ------------------------------------------------------------------------

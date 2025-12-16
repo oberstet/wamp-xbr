@@ -9,9 +9,9 @@ WAMP XBR Decentralized Messaging Extension
    :target: https://pypi.python.org/pypi/xbr
 .. |CI| image:: https://github.com/wamp-proto/wamp-xbr/workflows/main/badge.svg
    :target: https://github.com/wamp-proto/wamp-xbr/actions?query=workflow%3Amain
-.. |Docs| image:: https://readthedocs.org/projects/wamp-xbr/badge/?version=latest
-   :target: https://wamp-xbr.readthedocs.io/en/latest/
-.. |License| image:: https://img.shields.io/pypi/l/xbr.svg
+.. |Docs| image:: https://readthedocs.org/projects/xbr/badge/?version=latest
+   :target: https://xbr.readthedocs.io/en/latest/
+.. |License| image:: https://img.shields.io/badge/license-MIT-blue.svg
    :target: https://github.com/wamp-proto/wamp-xbr/blob/master/LICENSE
 .. |Downloads| image:: https://img.shields.io/pypi/dm/xbr.svg
    :target: https://pypi.python.org/pypi/xbr
