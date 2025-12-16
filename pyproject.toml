@@ -151,6 +151,13 @@ docs = [
 
     # MyST auto-linking
     "linkify-it-py>=2.0.0",
+
+    # Solidity syntax highlighting (for Solidity code blocks in docs)
+    "pygments-lexer-solidity>=0.7.0",
+
+    # sphinxcontrib-soliditydomain dependencies (loaded from git submodule)
+    "antlr4-python3-runtime>=4.9.0",
+    "peewee>=3.0.0",
 ]
 
 [project.urls]
