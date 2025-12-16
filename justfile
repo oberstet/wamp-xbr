@@ -650,22 +650,163 @@ publish-test venv="":
     ${VENV_PYTHON} -m twine upload --repository testpypi dist/*
     echo "--> Published to Test PyPI"
 
-# Download GitHub release artifacts (nightly or tagged release)
+# Download GitHub release artifacts (usage: `just download-github-release` for nightly, or `just download-github-release stable`)
+# Downloads wheel, sdist, and verifies checksums using curl (no gh auth required)
+# This is the unified download recipe for both docs integration and release notes generation
 download-github-release release_type="nightly":
     #!/usr/bin/env bash
-    set -e
-    echo "==> Downloading GitHub release artifacts ({{release_type}})..."
-    rm -rf ./dist
-    mkdir -p ./dist
-    if [ "{{release_type}}" = "nightly" ]; then
-        gh release download nightly --repo wamp-proto/wamp-xbr --dir ./dist --pattern '*.whl' --pattern '*.tar.gz' || \
-            echo "Note: No nightly release found or no artifacts available"
-    else
-        gh release download "{{release_type}}" --repo wamp-proto/wamp-xbr --dir ./dist --pattern '*.whl' --pattern '*.tar.gz'
-    fi
+    set -euo pipefail
+
+    RELEASE_TYPE="{{ release_type }}"
+    REPO="wamp-proto/wamp-xbr"
+
     echo ""
-    echo "Downloaded artifacts:"
-    ls -la ./dist/ || echo "No artifacts downloaded"
+    echo "════════════════════════════════════════════════════════════"
+    echo "  Downloading GitHub Release Artifacts"
+    echo "════════════════════════════════════════════════════════════"
+    echo ""
+    echo "Release type: ${RELEASE_TYPE}"
+    echo ""
+
+    # Determine which release tag to download using GitHub API (no auth required for public repos)
+    case "${RELEASE_TYPE}" in
+        nightly)
+            echo "==> Looking for nightly release (master-*)..."
+            RELEASE_TAG=$(curl -s "https://api.github.com/repos/${REPO}/releases" | \
+                jq -r '[.[] | select(.tag_name | startswith("master-"))][0].tag_name // empty')
+            if [ -z "${RELEASE_TAG}" ]; then
+                echo "❌ ERROR: No nightly (master-*) release found"
+                echo "Available releases:"
+                curl -s "https://api.github.com/repos/${REPO}/releases" | jq -r '.[0:10] | .[].tag_name'
+                exit 1
+            fi
+            ;;
+        stable|latest)
+            echo "==> Looking for stable release (v*)..."
+            RELEASE_TAG=$(curl -s "https://api.github.com/repos/${REPO}/releases" | \
+                jq -r '[.[] | select(.tag_name | startswith("v")) | select(.prerelease == false)][0].tag_name // empty')
+            if [ -z "${RELEASE_TAG}" ]; then
+                echo "❌ ERROR: No stable (v*) release found"
+                echo "Available releases:"
+                curl -s "https://api.github.com/repos/${REPO}/releases" | jq -r '.[0:10] | .[].tag_name'
+                exit 1
+            fi
+            ;;
+        development|dev)
+            echo "==> Looking for development release (fork-*)..."
+            RELEASE_TAG=$(curl -s "https://api.github.com/repos/${REPO}/releases" | \
+                jq -r '[.[] | select(.tag_name | startswith("fork-"))][0].tag_name // empty')
+            if [ -z "${RELEASE_TAG}" ]; then
+                echo "❌ ERROR: No development (fork-*) release found"
+                echo "Available releases:"
+                curl -s "https://api.github.com/repos/${REPO}/releases" | jq -r '.[0:10] | .[].tag_name'
+                exit 1
+            fi
+            ;;
+        *)
+            # Assume it's a specific tag name
+            RELEASE_TAG="${RELEASE_TYPE}"
+            ;;
+    esac
+
+    echo "✅ Found release: ${RELEASE_TAG}"
+    echo ""
+
+    # Destination directory - compatible with generate-release-notes
+    DEST_DIR="/tmp/release-artifacts/${RELEASE_TAG}"
+
+    # Create/clean destination directory
+    if [ -d "${DEST_DIR}" ]; then
+        echo "==> Cleaning existing directory: ${DEST_DIR}"
+        rm -rf "${DEST_DIR}"
+    fi
+    mkdir -p "${DEST_DIR}"
+
+    # Get release info and download all assets using curl
+    echo "==> Downloading all release assets to: ${DEST_DIR}"
+    echo ""
+    cd "${DEST_DIR}"
+
+    # Get asset URLs from GitHub API
+    RELEASE_JSON=$(curl -s "https://api.github.com/repos/${REPO}/releases/tags/${RELEASE_TAG}")
+    ASSET_URLS=$(echo "${RELEASE_JSON}" | jq -r '.assets[].browser_download_url')
+
+    if [ -z "${ASSET_URLS}" ]; then
+        echo "❌ ERROR: No assets found for release ${RELEASE_TAG}"
+        exit 1
+    fi
+
+    # Download each asset
+    for URL in ${ASSET_URLS}; do
+        FILENAME=$(basename "${URL}")
+        echo "  Downloading: ${FILENAME}"
+        curl -sL -o "${FILENAME}" "${URL}"
+    done
+
+    # Count different types of files
+    WHEEL_COUNT=$(ls -1 *.whl 2>/dev/null | wc -l || echo "0")
+    TARBALL_COUNT=$(ls -1 *.tar.gz 2>/dev/null | wc -l || echo "0")
+    CHECKSUM_COUNT=$(ls -1 *CHECKSUMS* 2>/dev/null | wc -l || echo "0")
+
+    echo ""
+    echo "==> Downloaded assets:"
+    ls -la
+    echo ""
+    echo "==> Asset summary:"
+    echo "    Wheels:     ${WHEEL_COUNT}"
+    echo "    Tarballs:   ${TARBALL_COUNT}"
+    echo "    Checksums:  ${CHECKSUM_COUNT}"
+
+    # Verify checksums if available (OpenSSL format: SHA2-256(./file)= hash)
+    CHECKSUM_FILE=""
+    for f in CHECKSUMS.sha256 CHECKSUMS-ALL.sha256; do
+        if [ -f "$f" ]; then
+            CHECKSUM_FILE="$f"
+            break
+        fi
+    done
+
+    if [ -n "${CHECKSUM_FILE}" ]; then
+        echo ""
+        echo "==> Verifying checksums from ${CHECKSUM_FILE}..."
+        VERIFIED=0
+        FAILED=0
+        while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            # Parse OpenSSL format: SHA2-256(./filename)= hash
+            FILE_PATH=$(echo "$line" | sed -E 's/^SHA2?-?256\(([^)]+)\)=.*/\1/')
+            EXPECTED_CHECKSUM=$(echo "$line" | awk -F'= ' '{print $2}')
+            FILE_PATH="${FILE_PATH#./}"
+            if [ -f "$FILE_PATH" ]; then
+                ACTUAL_CHECKSUM=$(openssl sha256 "$FILE_PATH" | awk '{print $2}')
+                if [ "$ACTUAL_CHECKSUM" = "$EXPECTED_CHECKSUM" ]; then
+                    VERIFIED=$((VERIFIED + 1))
+                else
+                    echo "    ❌ MISMATCH: $FILE_PATH"
+                    FAILED=$((FAILED + 1))
+                fi
+            fi
+        done < "${CHECKSUM_FILE}"
+        if [ $FAILED -gt 0 ]; then
+            echo "    ERROR: ${FAILED} file(s) failed verification!"
+            exit 1
+        else
+            echo "    ✅ ${VERIFIED} file(s) verified successfully"
+        fi
+    fi
+
+    echo ""
+    echo "════════════════════════════════════════════════════════════"
+    echo "✅ Download Complete"
+    echo "════════════════════════════════════════════════════════════"
+    echo ""
+    echo "Artifacts location: ${DEST_DIR}"
+    echo ""
+    echo "Next steps:"
+    echo "  1. Build docs:            just docs"
+    echo "  2. Integrate artifacts:   just docs-integrate-github-release ${RELEASE_TAG}"
+    echo "  3. Generate release notes: just generate-release-notes ${RELEASE_TAG}"
+    echo ""
 
 # Download release artifacts from GitHub and publish to PyPI
 publish-pypi venv="" tag="": (install-tools venv)
@@ -678,16 +819,19 @@ publish-pypi venv="" tag="": (install-tools venv)
     TAG="{{ tag }}"
     if [ -z "${TAG}" ]; then
         echo "Error: Please specify a tag to publish"
-        echo "Usage: just publish-pypi cpy311 v24.1.1"
+        echo "Usage: just publish-pypi cpy311 v25.12.1"
         exit 1
     fi
+
+    DOWNLOAD_DIR="/tmp/release-artifacts/${TAG}"
+
     echo "==> Publishing ${TAG} to PyPI..."
     echo ""
     echo "Step 1: Download release artifacts from GitHub..."
     just download-github-release "${TAG}"
     echo ""
     echo "Step 2: Verify packages with twine..."
-    "${VENV_PATH}/bin/twine" check dist/*
+    "${VENV_PATH}/bin/twine" check "${DOWNLOAD_DIR}"/*.whl "${DOWNLOAD_DIR}"/*.tar.gz
     echo ""
     echo "Note: This is a pure Python package (py3-none-any wheel)."
     echo "      auditwheel verification is not applicable (no native extensions)."
@@ -697,7 +841,7 @@ publish-pypi venv="" tag="": (install-tools venv)
     echo "WARNING: This will upload to PyPI!"
     echo "Press Ctrl+C to cancel, or Enter to continue..."
     read
-    "${VENV_PATH}/bin/twine" upload dist/*
+    "${VENV_PATH}/bin/twine" upload "${DOWNLOAD_DIR}"/*.whl "${DOWNLOAD_DIR}"/*.tar.gz
     echo ""
     echo "==> Successfully published ${TAG} to PyPI"
 
