@@ -58,6 +58,14 @@ jobs:
       - name: Install ty (Astral type checker)
         run: uv tool install ty --prerelease=allow
 
+      - name: Setup Node.js for Solidity compilation
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Compile Solidity contracts (required for editable install)
+        run: just compile-contracts
+
       - name: Create venv and install dev dependencies
         run: |
           just create cpy311
@@ -96,6 +104,14 @@ jobs:
       - name: Install just
         uses: extractions/setup-just@v3
 
+      - name: Setup Node.js for Solidity compilation
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Compile Solidity contracts (required for editable install)
+        run: just compile-contracts
+
       - name: Create venv and install dependencies
         run: |
           just create ${{ matrix.env }}
@@ -129,6 +145,14 @@ jobs:
 
       - name: Install just
         uses: extractions/setup-just@v3
+
+      - name: Setup Node.js for Solidity compilation
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Compile Solidity contracts (required for editable install)
+        run: just compile-contracts
 
       - name: Create venv and install dependencies
         run: |
