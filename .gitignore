@@ -23,7 +23,7 @@ coverageEnv
 scTopics
 .xbrdb-transactions
 .ipynb_checkpoints
-package-lock.json
+# package-lock.json is tracked for Dependabot security updates
 geth/privchain
 docker/data
 .coverage_contracts/
