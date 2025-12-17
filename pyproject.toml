@@ -171,6 +171,14 @@ Issues = "https://github.com/wamp-proto/wamp-xbr/issues"
 # Hatchling build configuration
 [tool.hatch.build.targets.wheel]
 packages = ["src/xbr"]
+# IMPORTANT: Exclude symlinks from src/xbr/ that point to abi and contract directories.
+# We use force-include below to include the actual directories. Without this exclusion,
+# hatchling may include files twice (once via symlink, once via force-include) causing
+# "Duplicate filename in local headers" errors that PyPI rejects.
+exclude = [
+    "src/xbr/abi",
+    "src/xbr/contract",
+]
 
 # IMPORTANT: Hatchling does NOT follow symlinks by default for security reasons.
 # We must use force-include to explicitly copy non-Python resources into the wheel.
