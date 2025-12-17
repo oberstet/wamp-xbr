@@ -34,7 +34,7 @@ dependencies = [
     # Async compatibility layer (Twisted/asyncio)
     "txaio>=25.12.2",
     # Object-relational database layer (flatbuffers reflection for schema handling)
-    "zlmdb>=25.12.2",
+    "zlmdb>=25.12.3",
     # bitarray is required by eth-account, but on pypy
     # see discussion/links on https://github.com/crossbario/autobahn-python/pull/1617
     "bitarray>=2.7.5",
