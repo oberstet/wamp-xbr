@@ -451,6 +451,183 @@ test-all:
         just test ${env}
     done
 
+# Run smoke tests (quick sanity check for imports and bundled files)
+test-smoke venv="":
+    #!/usr/bin/env bash
+    set -e
+    VENV_NAME="{{ venv }}"
+    if [ -z "${VENV_NAME}" ]; then
+        VENV_NAME=$(just --quiet _get-system-venv-name)
+    fi
+    VENV_PYTHON=$(just --quiet _get-venv-python "${VENV_NAME}")
+    VENV_PATH="{{ VENV_DIR }}/${VENV_NAME}"
+
+    echo "Running smoke tests with Python: $(${VENV_PYTHON} --version)"
+    echo "Venv: ${VENV_PATH}"
+    echo ""
+
+    # Run the smoke test Python script
+    ${VENV_PYTHON} "{{ PROJECT_DIR }}/scripts/smoke_test.py"
+
+# Test installing and verifying a built wheel (used in CI for artifact verification)
+# Usage: just test-wheel-install /path/to/xbr-*.whl
+test-wheel-install wheel_path:
+    #!/usr/bin/env bash
+    set -e
+    WHEEL_PATH="{{ wheel_path }}"
+
+    if [ ! -f "${WHEEL_PATH}" ]; then
+        echo "ERROR: Wheel file not found: ${WHEEL_PATH}"
+        exit 1
+    fi
+
+    WHEEL_NAME=$(basename "${WHEEL_PATH}")
+    echo "========================================================================"
+    echo "  WHEEL INSTALL TEST"
+    echo "========================================================================"
+    echo ""
+    echo "Wheel: ${WHEEL_NAME}"
+    echo ""
+
+    # Create ephemeral venv name based on wheel
+    EPHEMERAL_VENV="smoke-wheel-$$"
+    EPHEMERAL_PATH="{{ VENV_DIR }}/${EPHEMERAL_VENV}"
+
+    # Extract Python version from wheel filename
+    # Wheel format: {name}-{version}-{python tag}-{abi tag}-{platform tag}.whl
+    # Python tag examples: cp312, cp311, pp311, py3
+    PYTAG=$(echo "${WHEEL_NAME}" | sed -n 's/.*-\(cp[0-9]*\|pp[0-9]*\|py[0-9]*\)-.*/\1/p')
+
+    # For py3-none-any wheels (pure Python), use system Python
+    if [ "${PYTAG}" = "py3" ]; then
+        SYS_VENV=$(just --quiet _get-system-venv-name)
+        echo "Pure Python wheel detected, using system venv: ${SYS_VENV}"
+        PYTAG="${SYS_VENV}"
+    fi
+
+    # Map pytag to uv python version
+    case "${PYTAG}" in
+        cp314|cpy314) PYTHON_VERSION="3.14" ;;
+        cp313|cpy313) PYTHON_VERSION="3.13" ;;
+        cp312|cpy312) PYTHON_VERSION="3.12" ;;
+        cp311|cpy311) PYTHON_VERSION="3.11" ;;
+        pp311|pypy311) PYTHON_VERSION="pypy3.11" ;;
+        *) echo "Unknown Python tag: ${PYTAG}"; exit 1 ;;
+    esac
+
+    echo "Python version: ${PYTHON_VERSION}"
+    echo "Ephemeral venv: ${EPHEMERAL_PATH}"
+    echo ""
+
+    # Clean up any existing ephemeral venv
+    rm -rf "${EPHEMERAL_PATH}"
+
+    # Create fresh venv with uv
+    echo "Creating ephemeral venv..."
+    uv venv --python "${PYTHON_VERSION}" "${EPHEMERAL_PATH}"
+
+    # Install the wheel
+    echo "Installing wheel..."
+    uv pip install --python "${EPHEMERAL_PATH}/bin/python" "${WHEEL_PATH}"
+
+    # Run smoke tests
+    echo ""
+    echo "Running smoke tests..."
+    "${EPHEMERAL_PATH}/bin/python" "{{ PROJECT_DIR }}/scripts/smoke_test.py"
+    RESULT=$?
+
+    # Clean up ephemeral venv
+    echo ""
+    echo "Cleaning up ephemeral venv..."
+    rm -rf "${EPHEMERAL_PATH}"
+
+    if [ ${RESULT} -eq 0 ]; then
+        echo ""
+        echo "========================================================================"
+        echo "  WHEEL INSTALL TEST: PASSED"
+        echo "========================================================================"
+    else
+        echo ""
+        echo "========================================================================"
+        echo "  WHEEL INSTALL TEST: FAILED"
+        echo "========================================================================"
+        exit 1
+    fi
+
+# Test installing and verifying a source distribution (used in CI for artifact verification)
+# Usage: just test-sdist-install /path/to/xbr-*.tar.gz
+test-sdist-install sdist_path:
+    #!/usr/bin/env bash
+    set -e
+    SDIST_PATH="{{ sdist_path }}"
+
+    if [ ! -f "${SDIST_PATH}" ]; then
+        echo "ERROR: Source distribution not found: ${SDIST_PATH}"
+        exit 1
+    fi
+
+    SDIST_NAME=$(basename "${SDIST_PATH}")
+    echo "========================================================================"
+    echo "  SOURCE DISTRIBUTION INSTALL TEST"
+    echo "========================================================================"
+    echo ""
+    echo "Source dist: ${SDIST_NAME}"
+    echo ""
+
+    # Create ephemeral venv
+    EPHEMERAL_VENV="smoke-sdist-$$"
+    EPHEMERAL_PATH="{{ VENV_DIR }}/${EPHEMERAL_VENV}"
+
+    # Use system Python version
+    SYS_VENV=$(just --quiet _get-system-venv-name)
+    case "${SYS_VENV}" in
+        cpy314) PYTHON_VERSION="3.14" ;;
+        cpy313) PYTHON_VERSION="3.13" ;;
+        cpy312) PYTHON_VERSION="3.12" ;;
+        cpy311) PYTHON_VERSION="3.11" ;;
+        pypy311) PYTHON_VERSION="pypy3.11" ;;
+        *) echo "Unknown system venv: ${SYS_VENV}"; exit 1 ;;
+    esac
+
+    echo "Python version: ${PYTHON_VERSION}"
+    echo "Ephemeral venv: ${EPHEMERAL_PATH}"
+    echo ""
+
+    # Clean up any existing ephemeral venv
+    rm -rf "${EPHEMERAL_PATH}"
+
+    # Create fresh venv with uv
+    echo "Creating ephemeral venv..."
+    uv venv --python "${PYTHON_VERSION}" "${EPHEMERAL_PATH}"
+
+    # Install the sdist
+    echo "Installing source distribution..."
+    uv pip install --python "${EPHEMERAL_PATH}/bin/python" "${SDIST_PATH}"
+
+    # Run smoke tests
+    echo ""
+    echo "Running smoke tests..."
+    "${EPHEMERAL_PATH}/bin/python" "{{ PROJECT_DIR }}/scripts/smoke_test.py"
+    RESULT=$?
+
+    # Clean up ephemeral venv
+    echo ""
+    echo "Cleaning up ephemeral venv..."
+    rm -rf "${EPHEMERAL_PATH}"
+
+    if [ ${RESULT} -eq 0 ]; then
+        echo ""
+        echo "========================================================================"
+        echo "  SOURCE DISTRIBUTION INSTALL TEST: PASSED"
+        echo "========================================================================"
+    else
+        echo ""
+        echo "========================================================================"
+        echo "  SOURCE DISTRIBUTION INSTALL TEST: FAILED"
+        echo "========================================================================"
+        exit 1
+    fi
+
 # Generate code coverage report (requires: `just install-dev`)
 check-coverage venv="":
     #!/usr/bin/env bash
@@ -551,6 +728,91 @@ verify-wheels venv="": (install-tools venv)
     echo "    auditwheel verification is not applicable (no native extensions)."
     echo ""
     echo "==> Wheel verification complete."
+
+# Verify wheel contents include required non-Python files (ABI, contracts, templates)
+# This catches build configuration issues where hatchling doesn't include force-include files
+verify-wheel-contents:
+    #!/usr/bin/env bash
+    set -e
+    echo "==> Verifying wheel contents..."
+
+    # Find the wheel file
+    WHEEL=$(ls -1 dist/*.whl 2>/dev/null | head -1)
+    if [ -z "${WHEEL}" ]; then
+        echo "❌ No wheel found in dist/"
+        exit 1
+    fi
+    echo "--> Checking: ${WHEEL}"
+
+    # Required ABI files (compiled Solidity contracts)
+    REQUIRED_ABI_FILES=(
+        "xbr/abi/XBRToken.json"
+        "xbr/abi/XBRNetwork.json"
+        "xbr/abi/XBRMarket.json"
+        "xbr/abi/XBRChannel.json"
+        "xbr/abi/XBRCatalog.json"
+    )
+
+    # Required contract source files
+    REQUIRED_CONTRACT_FILES=(
+        "xbr/contract/XBRToken.sol"
+        "xbr/contract/XBRNetwork.sol"
+    )
+
+    # Required template files
+    REQUIRED_TEMPLATE_FILES=(
+        "xbr/templates/py-autobahn/obj.py.jinja2"
+        "xbr/templates/py-autobahn/service.py.jinja2"
+    )
+
+    MISSING=0
+
+    echo ""
+    echo "--> Checking ABI files..."
+    for f in "${REQUIRED_ABI_FILES[@]}"; do
+        if unzip -l "${WHEEL}" | grep -q "${f}"; then
+            echo "   ✓ ${f}"
+        else
+            echo "   ❌ MISSING: ${f}"
+            MISSING=$((MISSING + 1))
+        fi
+    done
+
+    echo ""
+    echo "--> Checking contract source files..."
+    for f in "${REQUIRED_CONTRACT_FILES[@]}"; do
+        if unzip -l "${WHEEL}" | grep -q "${f}"; then
+            echo "   ✓ ${f}"
+        else
+            echo "   ❌ MISSING: ${f}"
+            MISSING=$((MISSING + 1))
+        fi
+    done
+
+    echo ""
+    echo "--> Checking template files..."
+    for f in "${REQUIRED_TEMPLATE_FILES[@]}"; do
+        if unzip -l "${WHEEL}" | grep -q "${f}"; then
+            echo "   ✓ ${f}"
+        else
+            echo "   ❌ MISSING: ${f}"
+            MISSING=$((MISSING + 1))
+        fi
+    done
+
+    echo ""
+    if [ ${MISSING} -gt 0 ]; then
+        echo "❌ FAILED: ${MISSING} required file(s) missing from wheel"
+        echo ""
+        echo "This usually means the hatchling force-include config is wrong,"
+        echo "or compile-contracts was not run before building the wheel."
+        exit 1
+    else
+        echo "✓ All required files present in wheel"
+    fi
+
+# Alias for verify-wheels (used by release.yml)
+verify-dist venv="": (verify-wheels venv)
 
 # -----------------------------------------------------------------------------
 # -- Documentation
