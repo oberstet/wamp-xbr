@@ -13,6 +13,26 @@ Unreleased
 
 *No unreleased changes yet.*
 
+25.12.2 (2025-12-17)
+--------------------
+
+**New**
+
+* Added comprehensive smoke tests for wheel and sdist installation verification (#168)
+* Added ``test-wheel-install`` and ``test-sdist-install`` recipes for CI verification
+* Added Python 3.14 support to test matrix and classifiers
+
+**Fix**
+
+* Fixed wheel missing ``xbr/abi/`` directory with compiled Solidity ABIs (#168)
+* Fixed yapf import for Python 3.13+ compatibility (lib2to3 was removed)
+* Fixed CI to verify final built wheel in clean, separate venv (#168)
+
+**Other**
+
+* Updated zlmdb dependency to >=25.12.3 (fixes FlatBuffers reflection imports)
+* Added verify job to main.yml workflow for distribution testing
+
 25.12.1 (2025-12-16)
 --------------------
 
